@@ -10,6 +10,8 @@ import os
 import glob
 from tqdm import tqdm
 
+from utils import log_fail, log_success
+
 print(f"Torch version: {torch.__version__}")
 print(f"Cuda available: {torch.cuda.is_available()}")
 print(f"Torch geometric version: {torch_geometric.__version__}")
@@ -52,15 +54,15 @@ class PhishingDataset(Dataset):
             for _, url in root_urls.items():
                 edge_index, x, _, y = self._build_tensors(url, df)
 
-                data = Data(x=x, edge_index=edge_index, y=y)
+                self.data = Data(x=x, edge_index=edge_index, y=y)
 
-                if self.pre_filter is not None and not self.pre_filter(data):
+                if self.pre_filter is not None and not self.pre_filter(self.data):
                     continue
 
                 if self.pre_transform is not None:
-                    data = self.pre_transform(data)
+                    self.data = self.pre_transform(self.data)
 
-                torch.save(data, os.path.join(self.processed_dir, f'data_{idx}.pt'))
+                torch.save(self.data, os.path.join(self.processed_dir, f'data_{idx}.pt'))
                 idx += 1
 
 
@@ -82,7 +84,7 @@ class PhishingDataset(Dataset):
         df['cert_country'] = df['cert_country'].astype('string')
 
         del df['status_code']
-        # del df['depth']
+        del df['depth']
         del df['domain_creation_date']
         del df['cert_country'] # TODO: handle cert_country and sort by "dangerous" country
         return df
@@ -130,7 +132,7 @@ class PhishingDataset(Dataset):
         bool_columns = ["is_phishing", "is_https", "is_ip_address", "is_error_page",
             "has_sub_domain", "has_at_symbol", "is_valid_html", "has_form_with_url",
             "has_iframe", "use_mouseover", "is_cert_valid", "has_dns_record",
-            "has_whois"]
+            "has_whois", "path_starts_with_url"]
         # bool_column_idxs = [i for i, dt in enumerate(df.dtypes) if dt == bool]
         df[bool_columns] = df[bool_columns].apply(bool_to_int, axis=0)
 
@@ -157,46 +159,98 @@ class PhishingDataset(Dataset):
         id_to_feat = {}
         idx, idxs = 0, {}
         queue = [root_url]
+        visited = set()
 
         while True:
+            if len(queue) == 0:
+                break
             url = queue.pop()
-            node = df.loc[url]
+            try:
+                node = df.loc[url]
+                log_success(f'{url} found in features.')
+            except KeyError:
+                log_fail(f'{url} not found in features.')
+                node = self.error_page_node_feature
+                
             refs = node.refs
             refs = json.loads(refs) \
                 if refs is not np.nan else {}
             
-            is_leaf = node.depth == self.max_depth
-            if len(refs.keys()) > 0 and not is_leaf:
-                queue.extend(refs.keys())
-            idxs[url] = idx
-            idx += 1
+            if url not in idxs:
+                idxs[url] = idx
+                idx += 1
 
-            for ref, edge_feats in refs.items():
+            for i, edge in enumerate(refs):
+                ref = edge['url']
+                # nb_hrefs = edge['nb_edges']
+                if (url, ref, i) in visited:
+                    break
                 if ref not in idxs:
                     idxs[ref] = idx
                     idx += 1
                 from_.append(idxs[url])
                 to_.append(idxs[ref])
                 edges_.append([1]) # should be edge features
+                    
+                is_anchor = ref == url
+                if not is_anchor:
+                    queue.append(ref)
+                visited.add((url, ref, i))
 
             # remove url and refs
-            features = node[1:-1]
+            features = node[:-1]
             id_to_feat[idxs[url]] = features
-
-            if len(queue) == 0:
-                break
         
         x = [id_to_feat[k] for k in sorted(id_to_feat)] # (n, d)
+        log_success(f'{root_url} processed.')
 
         return (
             torch.tensor([from_, to_]),
             torch.tensor(x),
             torch.tensor(edges_),
-            torch.tensor(df.loc[root_url]),
+            torch.tensor(df.loc[root_url].is_phishing),
         )
         
+
+    def get(self, idx):
+        return torch.load(os.path.join(self.processed_dir, f'data_{idx}.pt'))
+
         
-        
+    @property
+    def error_page_node_feature(self):
+        data = {
+            # 'depth': self.nan_value,
+            'is_phishing': self.nan_value,
+            'redirects': self.nan_value,
+            'is_https': self.nan_value,
+            'is_ip_address': self.nan_value,
+            'is_error_page': self.nan_value,
+            'url_length': self.nan_value,
+            'domain_url_depth': self.nan_value,
+            'domain_url_length': self.nan_value,
+            'has_sub_domain': self.nan_value,
+            'has_at_symbol': self.nan_value,
+            'dashes_count': self.nan_value,
+            'path_starts_with_url': self.nan_value,
+            'is_valid_html': self.nan_value,
+            'anchors_count': self.nan_value,
+            'forms_count': self.nan_value,
+            'javascript_count': self.nan_value,
+            'self_anchors_count': self.nan_value,
+            'has_form_with_url': self.nan_value,
+            'has_iframe': self.nan_value,
+            'use_mouseover': self.nan_value,
+            'is_cert_valid': self.nan_value,
+            'has_dns_record': self.nan_value,
+            'has_whois': self.nan_value,
+            'cert_reliability': self.nan_value,
+            'domain_age': self.nan_value,
+            'domain_end_period': self.nan_value,
+            'refs': "{}",
+        }
+        return pd.Series(data=data)
+
+
         # while len(queue) != 0:
         #     ref = queue.pop()
         #     node = df[ref]
