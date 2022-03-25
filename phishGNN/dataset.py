@@ -17,7 +17,11 @@ print(f"Cuda available: {torch.cuda.is_available()}")
 print(f"Torch geometric version: {torch_geometric.__version__}")
 
 class PhishingDataset(Dataset):
-    def __init__(self, root, nan_value: float=-1.0, max_depth: int=1, test=False, transform=None, pre_transform=None):
+    def __init__(
+        self,
+        root,
+        process: bool=True,
+        nan_value: float=-1.0, max_depth: int=1, test=False, transform=None, pre_transform=None):
         """
         root = Where the dataset should be stored. This folder is split
         into raw_dir (downloaded dataset) and processed_dir (processed data). 
@@ -41,6 +45,7 @@ class PhishingDataset(Dataset):
         pass
 
     def process(self):
+        # return
         idx = 0
         for raw_path in self.raw_paths:
             # loop over all files in `raw_file_names`
@@ -52,9 +57,10 @@ class PhishingDataset(Dataset):
             df = df.set_index('url')
 
             for _, url in root_urls.items():
-                edge_index, x, _, y = self._build_tensors(url, df)
+                edge_index, x, _, y, id_to_url, error_pages = self._build_tensors(url, df)
 
                 self.data = Data(x=x, edge_index=edge_index, y=y)
+                self.data.edge_attr = (id_to_url, error_pages)
 
                 if self.pre_filter is not None and not self.pre_filter(self.data):
                     continue
@@ -64,10 +70,12 @@ class PhishingDataset(Dataset):
 
                 torch.save(self.data, os.path.join(self.processed_dir, f'data_{idx}.pt'))
                 idx += 1
+                if idx == 5:
+                    break
 
 
     def len(self):
-        return len(self.processed_file_names)
+        return 100
 
 
     def _read_csv(self, path: str) -> pd.DataFrame:
@@ -153,13 +161,14 @@ class PhishingDataset(Dataset):
             df: the dataset of one graph as form of pandas daframe
 
         Returns:
-            Tuple[edge_index, x, edge_attr, y]
+            Tuple[edge_index, x, edge_attr, y, id_to_url]
         """
         from_, to_, edges_ = [], [], []
         id_to_feat = {}
         idx, idxs = 0, {}
         queue = [root_url]
         visited = set()
+        error_pages = set()
 
         while True:
             if len(queue) == 0:
@@ -171,7 +180,7 @@ class PhishingDataset(Dataset):
             except KeyError:
                 log_fail(f'{url} not found in features.')
                 node = self.error_page_node_feature
-                
+
             refs = node.refs
             refs = json.loads(refs) \
                 if refs is not np.nan else {}
@@ -185,6 +194,15 @@ class PhishingDataset(Dataset):
                 # nb_hrefs = edge['nb_edges']
                 if (url, ref, i) in visited:
                     break
+                try:
+                    node = df.loc[ref]
+                    log_success(f'{ref} found in features.')
+                except KeyError:
+                    log_fail(f'{ref} not found in features.')
+                    continue
+                node = self.error_page_node_feature
+                if ref not in df.index:
+                    error_pages.add(ref)
                 if ref not in idxs:
                     idxs[ref] = idx
                     idx += 1
@@ -209,11 +227,13 @@ class PhishingDataset(Dataset):
             torch.tensor(x),
             torch.tensor(edges_),
             torch.tensor(df.loc[root_url].is_phishing),
+            idxs,
+            error_pages,
         )
         
 
     def get(self, idx):
-        return torch.load(os.path.join(self.processed_dir, f'data_{idx}.pt'))
+        return torch.load(os.path.join(os.path.join(self.root, 'processed'), f'data_{idx}.pt'))
 
         
     @property
