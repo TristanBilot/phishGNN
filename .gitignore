@@ -3,3 +3,5 @@ dataset/
 data/
 .vscode/
 *.pt
+*.html
+*.png
