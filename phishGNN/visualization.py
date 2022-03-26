@@ -1,7 +1,7 @@
 import collections
+import os
 from typing import Dict, Set
 
-from urllib.parse import urlparse
 from pyvis.network import Network
 import networkx as nx
 import torch
@@ -21,11 +21,15 @@ def visualize(
     width: int=1000,
     height: int=800,
     html_save_file: str="graph.html",
-    with_features=False,
 ):
     """Create an html file with the corresponding graph
     plotted using the pyvis library.
     """
+
+    folder = os.path.dirname(html_save_file)
+    if folder != '':
+        os.makedirs(folder, exist_ok=True)
+
     edge_index = data.edge_index
     viz_utils = data.pos
     id_to_url = {v: k for k, v in viz_utils['url_to_id'].items()}
@@ -40,7 +44,8 @@ def visualize(
 
     net.show_buttons(filter_=['physics'])
 
-    domain = extract_domain_name(id_to_url[0])
+    root_url = id_to_url[0]
+    domain = extract_domain_name(root_url)
     for node in net.nodes:
         node_url = id_to_url[node['id']]
         node['size'] = 15
@@ -68,3 +73,13 @@ def visualize(
             e['label'] = nb_occurences
 
     net.save_graph(html_save_file)
+
+    with open(html_save_file, 'a') as html_file:
+        graph_data_html = f"""
+            <div id="graph_data" 
+                is_phishing="{data.y == 1.}"
+                url="{root_url}"
+                nb_edges="{len(edges)}">
+            </div>
+        """
+        html_file.write(graph_data_html)
