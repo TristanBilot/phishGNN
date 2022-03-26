@@ -9,8 +9,5 @@ if __name__ == "__main__":
     dataset = PhishingDataset(root=path)
     data = dataset[0]
 
-    edges = data.edge_index
-    url_to_id, error_pages = data.edge_attr
-
-    visualize(edges, url_to_id, error_pages)
+    visualize(data)
     

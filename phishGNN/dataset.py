@@ -57,10 +57,10 @@ class PhishingDataset(Dataset):
             df = df.set_index('url')
 
             for _, url in root_urls.items():
-                edge_index, x, _, y, id_to_url, error_pages = self._build_tensors(url, df)
+                edge_index, x, _, y, viz_utils = self._build_tensors(url, df)
 
                 self.data = Data(x=x, edge_index=edge_index, y=y)
-                self.data.edge_attr = (id_to_url, error_pages)
+                self.data.pos = viz_utils
 
                 if self.pre_filter is not None and not self.pre_filter(self.data):
                     continue
@@ -70,7 +70,7 @@ class PhishingDataset(Dataset):
 
                 torch.save(self.data, os.path.join(self.processed_dir, f'data_{idx}.pt'))
                 idx += 1
-                if idx == 5:
+                if idx == 10:
                     break
 
 
@@ -161,11 +161,11 @@ class PhishingDataset(Dataset):
             df: the dataset of one graph as form of pandas daframe
 
         Returns:
-            Tuple[edge_index, x, edge_attr, y, id_to_url]
+            Tuple[edge_index, x, edge_attr, y, viz_utils]
         """
         from_, to_, edges_ = [], [], []
         id_to_feat = {}
-        idx, idxs = 0, {}
+        idx, url_to_id = 0, {}
         queue = [root_url]
         visited = set()
         error_pages = set()
@@ -185,8 +185,8 @@ class PhishingDataset(Dataset):
             refs = json.loads(refs) \
                 if refs is not np.nan else {}
             
-            if url not in idxs:
-                idxs[url] = idx
+            if url not in url_to_id:
+                url_to_id[url] = idx
                 idx += 1
 
             for i, edge in enumerate(refs):
@@ -194,20 +194,20 @@ class PhishingDataset(Dataset):
                 # nb_hrefs = edge['nb_edges']
                 if (url, ref, i) in visited:
                     break
-                try:
-                    node = df.loc[ref]
-                    log_success(f'{ref} found in features.')
-                except KeyError:
-                    log_fail(f'{ref} not found in features.')
-                    continue
+                # try:
+                #     node = df.loc[ref]
+                #     log_success(f'{ref} found in features.')
+                # except KeyError:
+                #     log_fail(f'{ref} not found in features.')
+                #     continue
                 node = self.error_page_node_feature
                 if ref not in df.index:
                     error_pages.add(ref)
-                if ref not in idxs:
-                    idxs[ref] = idx
+                if ref not in url_to_id:
+                    url_to_id[ref] = idx
                     idx += 1
-                from_.append(idxs[url])
-                to_.append(idxs[ref])
+                from_.append(url_to_id[url])
+                to_.append(url_to_id[ref])
                 edges_.append([1]) # should be edge features
                     
                 is_anchor = ref == url
@@ -217,9 +217,13 @@ class PhishingDataset(Dataset):
 
             # remove url and refs
             features = node[:-1]
-            id_to_feat[idxs[url]] = features
+            id_to_feat[url_to_id[url]] = features
         
         x = [id_to_feat[k] for k in sorted(id_to_feat)] # (n, d)
+        visualization = {
+            "url_to_id": url_to_id,
+            "error_pages": error_pages,
+        }
         log_success(f'{root_url} processed.')
 
         return (
@@ -227,8 +231,7 @@ class PhishingDataset(Dataset):
             torch.tensor(x),
             torch.tensor(edges_),
             torch.tensor(df.loc[root_url].is_phishing),
-            idxs,
-            error_pages,
+            visualization,
         )
         
 
