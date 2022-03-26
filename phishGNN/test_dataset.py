@@ -66,7 +66,7 @@ def test_dataset_easy1():
     x_should_be = [2, 3, 4]
 
     dataset = PhishingDataset("root")
-    edge_index, x, edge_attr, y = dataset._build_tensors('root', df)
+    edge_index, x, edge_attr, y, _ = dataset._build_tensors('root', df)
 
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
     assert [int(i[1]) for i in x] == x_should_be
@@ -86,7 +86,7 @@ def test_dataset_easy2():
     x_should_be = [2, 3, 4, 5, 6, 7]
 
     dataset = PhishingDataset("root")
-    edge_index, x, edge_attr, y = dataset._build_tensors('root', df)
+    edge_index, x, edge_attr, y, _ = dataset._build_tensors('root', df)
 
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
     assert [int(i[1]) for i in x] == x_should_be
@@ -102,7 +102,7 @@ def test_dataset_loop1():
     x_should_be = [2, 3, 4]
 
     dataset = PhishingDataset("root")
-    edge_index, x, edge_attr, y = dataset._build_tensors('root', df)
+    edge_index, x, edge_attr, y, _ = dataset._build_tensors('root', df)
 
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
     assert [int(i[1]) for i in x] == x_should_be
@@ -118,7 +118,7 @@ def test_dataset_loop2():
     x_should_be = [2, 4]
 
     dataset = PhishingDataset("root")
-    edge_index, x, edge_attr, y = dataset._build_tensors('root', df)
+    edge_index, x, edge_attr, y, _ = dataset._build_tensors('root', df)
 
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
     assert [int(i[1]) for i in x] == x_should_be
@@ -132,7 +132,7 @@ def test_dataset_missing1():
     x_should_be = [2, -1]
 
     dataset = PhishingDataset("root")
-    edge_index, x, edge_attr, y = dataset._build_tensors('root', df)
+    edge_index, x, edge_attr, y, _ = dataset._build_tensors('root', df)
 
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
     assert [int(i[1]) for i in x] == x_should_be
@@ -147,10 +147,11 @@ def test_dataset_missing2():
     x_should_be = [2, 3, -1, -1, -1]
 
     dataset = PhishingDataset("root")
-    edge_index, x, edge_attr, y = dataset._build_tensors('root', df)
+    edge_index, x, edge_attr, y, _ = dataset._build_tensors('root', df)
 
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
     assert [int(i[1]) for i in x] == x_should_be
     assert y == 1.
 
 
+test_dataset_easy1()

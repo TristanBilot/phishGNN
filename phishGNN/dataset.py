@@ -200,7 +200,7 @@ class PhishingDataset(Dataset):
                 # except KeyError:
                 #     log_fail(f'{ref} not found in features.')
                 #     continue
-                node = self.error_page_node_feature
+                #     node = self.error_page_node_feature
                 if ref not in df.index:
                     error_pages.add(ref)
                 if ref not in url_to_id:
