@@ -1,5 +1,4 @@
 import json
-from operator import index
 import pandas as pd
 import torch
 import torch_geometric
@@ -19,13 +18,19 @@ print(f"Torch geometric version: {torch_geometric.__version__}")
 class PhishingDataset(Dataset):
     def __init__(
         self,
-        root,
-        process: bool=True,
-        nan_value: float=-1.0, max_depth: int=1, test=False, transform=None, pre_transform=None):
+        root: str,
+        use_process: bool=True,
+        nan_value: float=-1.0,
+        max_depth: int=1,
+        test=False,
+        transform=None,
+        pre_transform=None,
+    ):
         """
         root = Where the dataset should be stored. This folder is split
         into raw_dir (downloaded dataset) and processed_dir (processed data). 
         """
+        self.use_process = use_process
         self.nan_value = nan_value
         self.max_depth = max_depth
         self.test = test
@@ -45,37 +50,40 @@ class PhishingDataset(Dataset):
         pass
 
     def process(self):
-        # return
-        idx = 0
-        for raw_path in self.raw_paths:
-            # loop over all files in `raw_file_names`
+        """Reads csv files in data/raw and preprocess so that output
+        preprocessed files are written in data/processed folder.
 
+        Side effects:
+            self.data.pos = {
+                "url_to_id": url_to_id,
+                "error_pages": error_pages,
+            } contains data needed fdorthe visualization of the graphs.
+        """
+        if not self.use_process:
+            return
+
+        # loop over all files in `raw_file_names`
+        for i, raw_path in enumerate(self.raw_paths):
             df = self._read_csv(raw_path)
             df = self._normalize_features(df)
 
             root_urls = df[~df['is_phishing'].isin([self.nan_value])]['url']
             df = df.set_index('url')
 
+            # loop over each root urls in the dataset
             for _, url in tqdm(root_urls.items(), total=len(root_urls)):
                 edge_index, x, _, y, viz_utils = self._build_tensors(url, df)
 
                 self.data = Data(x=x, edge_index=edge_index, y=y)
                 self.data.pos = viz_utils
 
-                if self.pre_filter is not None and not self.pre_filter(self.data):
-                    continue
-
-                if self.pre_transform is not None:
-                    self.data = self.pre_transform(self.data)
-
-                torch.save(self.data, os.path.join(self.processed_dir, f'data_{idx}.pt'))
-                idx += 1
-                # if idx == 10:
+                torch.save(self.data, os.path.join(self.processed_dir, f'data_{i}.pt'))
+                # if i == 10:
                 #     break
 
 
     def len(self):
-        return 100
+        return 2500
 
 
     def _read_csv(self, path: str) -> pd.DataFrame:

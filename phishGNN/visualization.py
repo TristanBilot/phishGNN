@@ -7,21 +7,13 @@ import networkx as nx
 import torch
 from torch_geometric.data import Data
 
-from utils import tensor_to_tuple_list
+from utils import tensor_to_tuple_list, extract_domain_name
 
 
 ROOT_COLOR          = '#0096FF'
 DOMAIN_COLOR        = '#73FCD6'
 OUT_DOMAIN_COLOR    = '#FFD479'
 ERROR_COLOR         = '#FF7E79'
-
-
-def extract_domain_name(url):
-    url = '{}://{}'.format(urlparse(url).scheme,
-        urlparse(url).netloc)
-    i = 1 if url.find('www.') != -1 else 0
-    url = urlparse(url)
-    return '.'.join(url.hostname.split('.')[i:])
 
 
 def visualize(
@@ -31,6 +23,9 @@ def visualize(
     html_save_file: str="graph.html",
     with_features=False,
 ):
+    """Create an html file with the corresponding graph
+    plotted using the pyvis library.
+    """
     edge_index = data.edge_index
     viz_utils = data.pos
     id_to_url = {v: k for k, v in viz_utils['url_to_id'].items()}
