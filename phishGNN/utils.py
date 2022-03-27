@@ -43,3 +43,18 @@ def extract_domain_name(url: str):
     i = 1 if url.find('www.') != -1 else 0
     url = urlparse(url)
     return '.'.join(url.hostname.split('.')[i:])
+
+
+def remove_prefix(text, prefix):
+    if text.startswith(prefix):
+        return text[len(prefix):]
+    return text
+
+
+def normalize_www_prefix(url: str):
+    is_https = url.startswith('https://')
+    url = remove_prefix(url, 'https://')
+    url = remove_prefix(url, 'http://')
+    url = remove_prefix(url, 'www.')
+
+    return f'http{"s" if is_https else ""}://www.{url}'

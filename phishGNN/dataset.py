@@ -1,21 +1,25 @@
+import glob
 import json
+import os
+from typing import Dict, List
+
+import numpy as np
 import pandas as pd
 import torch
 import torch_geometric
-from torch_geometric.data import Dataset
-from torch_geometric.data import Data
-import numpy as np 
-import os
-import glob
+from torch_geometric.data import Data, Dataset
 from tqdm import tqdm
 
-from utils import log_fail, log_success
+from utils import log_fail, log_success, normalize_www_prefix
 
 print(f"Torch version: {torch.__version__}")
 print(f"Cuda available: {torch.cuda.is_available()}")
 print(f"Torch geometric version: {torch_geometric.__version__}")
 
 class PhishingDataset(Dataset):
+    """Dataset containing both phishing and non-phishing
+    website urls.
+    """
     def __init__(
         self,
         root: str,
@@ -128,6 +132,12 @@ class PhishingDataset(Dataset):
             max = col.max()
             return col.apply(lambda x: (x - min) / (max - min))
 
+        def normalize_refs(refs: List[Dict]):
+            refs = json.loads(refs)
+            for ref in refs:
+                ref['url'] = self._normalize_url(ref['url'])
+            return refs
+
         # def str_to_float(col: pd.Series):
         #     col = col.fillna(self.nan_value)
         #     s = set(col.unique())
@@ -151,6 +161,11 @@ class PhishingDataset(Dataset):
             "has_whois", "path_starts_with_url"]
         # bool_column_idxs = [i for i, dt in enumerate(df.dtypes) if dt == bool]
         df[bool_columns] = df[bool_columns].apply(bool_to_int, axis=0)
+
+        # normalize urls
+        df['refs'] = df['refs'].apply(normalize_refs)
+        df['url'] = df['url'].apply(self._normalize_url)
+        df = df.drop_duplicates(subset='url', keep='first')
 
         # ignore url
         # no_url = df.iloc[: , 1:]
@@ -178,7 +193,7 @@ class PhishingDataset(Dataset):
         visited = set()
         error_pages = set()
 
-        def map_url_to_id(url):
+        def map_url_to_id(url: str):
             url_to_id[url] = len(url_to_id) \
                 if url not in url_to_id else url_to_id[url]
 
@@ -194,9 +209,6 @@ class PhishingDataset(Dataset):
                 node = self.error_page_node_feature
 
             refs = node.refs
-            refs = json.loads(refs) \
-                if refs is not np.nan else {}
-            
             map_url_to_id(url)
 
             for i, edge in enumerate(refs):
@@ -277,10 +289,15 @@ class PhishingDataset(Dataset):
             'cert_reliability': self.nan_value,
             'domain_age': self.nan_value,
             'domain_end_period': self.nan_value,
-            'refs': "{}",
+            'refs': [],
         }
         return pd.Series(data=data)
 
+
+    def _normalize_url(self, url: str):
+        url = url.rstrip('/')
+        url = normalize_www_prefix(url)
+        return url
 
         # while len(queue) != 0:
         #     ref = queue.pop()

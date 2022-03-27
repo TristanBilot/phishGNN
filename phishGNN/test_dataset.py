@@ -1,7 +1,6 @@
 import pytest
 from typing import List, Tuple
 
-import json
 import pandas as pd
 import torch
 from torch import Tensor
@@ -10,7 +9,7 @@ from dataset import PhishingDataset
 
 
 def dataframe_mock(rows: List[Tuple[str, List, str]]):
-    refs = [json.dumps([{"url": ref, "nb_edges": 1} for ref in row[1]]) for row in rows]
+    refs = [[{"url": ref, "nb_edges": 1} for ref in row[1]] for row in rows]
     urls = [row[0] for row in rows]
     
     features = [
@@ -153,5 +152,12 @@ def test_dataset_missing2():
     assert [int(i[1]) for i in x] == x_should_be
     assert y == 1.
 
-
-test_dataset_easy1()
+def test_dataset_normalize_url():
+    dataset = PhishingDataset("root")
+    assert dataset._normalize_url('http://test.com') == "http://www.test.com"
+    assert dataset._normalize_url('https://test.com') == "https://www.test.com"
+    assert dataset._normalize_url('https://www.test.com') == "https://www.test.com"
+    assert dataset._normalize_url('www.test.com') == "http://www.test.com"
+    assert dataset._normalize_url('test.com') == "http://www.test.com"
+    assert dataset._normalize_url("http://www.test.com/") == "http://www.test.com"
+    assert dataset._normalize_url("http://www.test.com") == "http://www.test.com"
