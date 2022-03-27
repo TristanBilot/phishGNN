@@ -9,7 +9,7 @@ import torch
 from tqdm import tqdm
 from torch_geometric.data import Data
 
-from utils import tensor_to_tuple_list, extract_domain_name
+from utils.utils import tensor_to_tuple_list, extract_domain_name
 from dataset import PhishingDataset
 
 

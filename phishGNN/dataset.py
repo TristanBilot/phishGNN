@@ -10,7 +10,7 @@ import torch_geometric
 from torch_geometric.data import Data, Dataset
 from tqdm import tqdm
 
-from utils import log_fail, log_success, normalize_www_prefix
+from utils.utils import log_fail, log_success, normalize_www_prefix
 
 print(f"Torch version: {torch.__version__}")
 print(f"Cuda available: {torch.cuda.is_available()}")

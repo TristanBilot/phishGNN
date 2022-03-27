@@ -1,9 +1,13 @@
 import pytest
+import os
+import sys
 from typing import List, Tuple
 
 import pandas as pd
 import torch
 from torch import Tensor
+
+sys.path.append(os.path.join(os.getcwd(), 'phishGNN'))
 
 from dataset import PhishingDataset
 
