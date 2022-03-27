@@ -1,0 +1,81 @@
+<html> 
+<head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis-network.min.js"> </script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.16.1/vis.css" type="text/css" />
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<script> 
+		var graph_num = 0
+		function load_graph(graph_num) {
+			if (graph_num < 0)
+				return
+			$("#includedContent").load("graphs/grapsh" + graph_num + ".html", function() {
+				data = $("#graph_data")
+                if (!data.length) {
+                    $("#includedContent").html("No html files found in graph/ folder, run visualization.py first.")
+                    return
+                }
+
+				is_phishing = data.attr("is_phishing")
+				nb_edges = data.attr("nb_edges")
+				url = data.attr("url")
+				
+				$("#graph_info").html(
+					"<span class=\"badge badge-secondary\">URL: <a href=\"" + url + "\">" + url + "</a></span><br>" +
+					"<span class=\"badge badge-secondary\">Phishing: " + is_phishing + "</span><br>" +
+					"<span class=\"badge badge-secondary\">Nb edges: " + nb_edges + "</span><br>"
+				)
+
+				$("#buttons").html(
+					"<button type=\"button\" class=\"btn btn-primary\" id=\"prev_btn\">Previous</button> &nbsp &nbsp" +
+					"<button type=\"button\" class=\"btn btn-primary\" id=\"next_btn\">Next</button>"
+				)
+
+				$("#next_btn").click(() => load_graph(++graph_num))
+				$("#prev_btn").click(() => load_graph(--graph_num))
+			});
+		}
+
+		$(function(){
+			load_graph(graph_num)
+		});
+	</script> 
+</head> 
+
+<body> 
+	<div id="graph_block border">
+		<div id="graph_info" class="graph_info"></div>
+		<div id="buttons"></div>
+	</div>
+	<div id="includedContent"></div>
+</body> 
+
+<style>
+	.buttons {
+		float: left;
+	}
+	.buttons button {
+		font-size: 18px;
+	}
+	.graph_block{
+		padding: 20px;
+		background-color: aliceblue;
+		overflow-wrap: break-word;
+
+	} 
+	.graph_info {
+		font-size: 17px;
+		width: 60%;
+		float: left;
+	}
+	.graph_info span {
+		margin: 3px;
+	}
+	.graph_info a {
+		color: white;
+	}
+	.graph_info a:hover {
+		color: ghostwhite;
+	}
+</style>
+</html>

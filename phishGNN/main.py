@@ -57,8 +57,4 @@ if __name__ == "__main__":
         test_acc = test(test_loader)
         print(f'Epoch: {epoch:03d}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
 
-
-    # for i in range(10):
-    #     data = dataset[i]
-    #     visualize(data, html_save_file=f"graphs/graph{i}.html")
     

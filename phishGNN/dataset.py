@@ -98,7 +98,7 @@ class PhishingDataset(Dataset):
 
 
     def len(self):
-        return (len(os.listdir(self.processed_dir)) - 2) // 2
+        return (len(os.listdir(self.processed_dir)) - 4) // 2
 
 
     def _read_csv(self, path: str) -> pd.DataFrame:

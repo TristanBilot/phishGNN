@@ -1,13 +1,16 @@
 import collections
+import glob
 import os
 from typing import Dict, Set
 
 from pyvis.network import Network
 import networkx as nx
 import torch
+from tqdm import tqdm
 from torch_geometric.data import Data
 
 from utils import tensor_to_tuple_list, extract_domain_name
+from dataset import PhishingDataset
 
 
 ROOT_COLOR          = '#0096FF'
@@ -83,3 +86,36 @@ def visualize(
             </div>
         """
         html_file.write(graph_data_html)
+
+
+def generate_every_graphs():
+    """Creates the visulaization graphs as html files
+    for every example in the dataset (based on the files
+    in data/processed).
+    """
+    path = os.path.join(os.getcwd(), "data")
+    data_files = sorted(glob.glob(os.path.join(path, "processed", "data_viz*")))
+    use_process = False
+
+    if not os.path.exists(path) or len(data_files) == 0:
+        print(f"Warning: no data files found in {path}, processing the dataset...")
+        raw_files = sorted(glob.glob(os.path.join(path, "raw", "*")))
+        if len(raw_files) == 0:
+            raise FileNotFoundError(f"No csv raw files found in {os.path.join(path, 'raw')}")
+        print(f"{len(raw_files)} file(s) found in {os.path.join(path, 'raw')}")
+        use_process = True
+
+    dataset = PhishingDataset(
+        root=path,
+        use_process=use_process,
+        visulization_mode=True,
+    )
+    print(f"Start generating graphs...")
+    for i, data in enumerate(tqdm(dataset, total=len(dataset))):
+        visualize(data, html_save_file=f"graphs/graph{i}.html")
+
+    print(f"Graphs successfully created.")
+
+
+if __name__ == "__main__":
+    generate_every_graphs()
