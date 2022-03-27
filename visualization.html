@@ -13,22 +13,23 @@
 				data = $("#graph_data")
                 if (!data.length) {
                     $("#includedContent").html("No html files found in graphs/ folder, run visualization.py first.")
+                    $(".right-block").hide()
                     return
                 }
 
 				is_phishing = data.attr("is_phishing")
 				nb_edges = data.attr("nb_edges")
+                nb_nodes = data.attr("nb_nodes")
 				url = data.attr("url")
+                
+                $("#url").html(`<b>URL</b><br><a href="${url}">${url}</a>`)
+                $("#phishing").html(`<b>Phishing</b><br>${is_phishing}`)
+                $("#nb_edges").html(`<b>Edges</b><br>${nb_edges}`)
+                $("#nb_nodes").html(`<b>Nodes</b><br>${nb_nodes}`)
 				
-				$("#graph_info").html(
-					"<span class=\"badge badge-secondary\">URL: <a href=\"" + url + "\">" + url + "</a></span><br>" +
-					"<span class=\"badge badge-secondary\">Phishing: " + is_phishing + "</span><br>" +
-					"<span class=\"badge badge-secondary\">Nb edges: " + nb_edges + "</span><br>"
-				)
-
 				$("#buttons").html(
-					"<button type=\"button\" class=\"btn btn-primary\" id=\"prev_btn\">Previous</button> &nbsp &nbsp" +
-					"<button type=\"button\" class=\"btn btn-primary\" id=\"next_btn\">Next</button>"
+					`<button type="button" class="btn btn-primary" id="prev_btn">Previous</button> &nbsp &nbsp
+					<button type="button" class="btn btn-primary" id="next_btn">Next</button>`
 				)
 
 				$("#next_btn").click(() => load_graph(++graph_num))
@@ -36,46 +37,32 @@
 			});
 		}
 
-		$(function(){
+		$(function() {
 			load_graph(graph_num)
 		});
 	</script> 
 </head> 
 
 <body> 
-	<div id="graph_block border">
-		<div id="graph_info" class="graph_info"></div>
-		<div id="buttons"></div>
-	</div>
-	<div id="includedContent"></div>
-</body> 
-
-<style>
-	.buttons {
-		float: left;
-	}
-	.buttons button {
-		font-size: 18px;
-	}
-	.graph_block{
-		padding: 20px;
-		background-color: aliceblue;
-		overflow-wrap: break-word;
-
-	} 
-	.graph_info {
-		font-size: 17px;
-		width: 60%;
-		float: left;
-	}
-	.graph_info span {
-		margin: 3px;
-	}
-	.graph_info a {
-		color: white;
-	}
-	.graph_info a:hover {
-		color: ghostwhite;
-	}
-</style>
+    <nav class="navbar navbar-light bg-light">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">
+            <img src="img/graph.png" alt="" width="30" height="30" class="d-inline-block align-text-top">
+            GNN visualizer
+          </a>
+        </div>
+      </nav>
+    <div id="includedContent"></div>
+    <div class="right-block">
+        <div id="graph_block border">
+            <ul class="list-group">
+                <li class="list-group-item" id="url"></li>
+                <li class="list-group-item" id="phishing"></li>
+                <li class="list-group-item" id="nb_edges"></li>
+                <li class="list-group-item" id="nb_nodes"></li>
+                <li class="list-group-item" id="buttons"></li>
+            </ul>
+        </div>
+    </div>
+</body>
 </html>

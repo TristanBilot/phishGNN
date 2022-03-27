@@ -45,8 +45,6 @@ def visualize(
     net = Network(width=width, height=height, directed=True)
     net.from_nx(G)
 
-    net.show_buttons(filter_=['physics'])
-
     root_url = id_to_url[0]
     domain = extract_domain_name(root_url)
     for node in net.nodes:
@@ -82,7 +80,9 @@ def visualize(
             <div id="graph_data" 
                 is_phishing="{data.y == 1.}"
                 url="{root_url}"
-                nb_edges="{len(edges)}">
+                nb_edges="{data.num_edges}"
+                nb_nodes="{data.num_nodes}"
+            >
             </div>
         """
         html_file.write(graph_data_html)
