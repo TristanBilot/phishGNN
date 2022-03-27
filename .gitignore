@@ -1,6 +1,7 @@
 __pycache__/
 dataset/
-data/
+data/raw/*
+data/processed/*
 root/
 graphs/
 .vscode/
