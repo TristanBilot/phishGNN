@@ -1,6 +1,7 @@
 __pycache__/
 dataset/
 data/
+root/
 .vscode/
 *.pt
 *.html

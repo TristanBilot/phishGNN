@@ -24,6 +24,7 @@ class PhishingDataset(Dataset):
         self,
         root: str,
         use_process: bool=True,
+        visulization_mode: bool=False,
         nan_value: float=-1.0,
         max_depth: int=1,
         test=False,
@@ -35,6 +36,7 @@ class PhishingDataset(Dataset):
         into raw_dir (downloaded dataset) and processed_dir (processed data). 
         """
         self.use_process = use_process
+        self.visulization_mode = visulization_mode
         self.nan_value = nan_value
         self.max_depth = max_depth
         self.test = test
@@ -49,6 +51,15 @@ class PhishingDataset(Dataset):
     @property
     def processed_file_names(self):
         return [file + ".pt" for file in self.raw_file_names]
+
+    @property
+    def num_classes(self):
+        return 2
+
+    def file_name(self, idx: int):
+        if self.visulization_mode:
+            return f'data_viz_{idx}.pt'
+        return f'data_{idx}.pt'
 
     def download(self):
         pass
@@ -79,13 +90,15 @@ class PhishingDataset(Dataset):
                 edge_index, x, _, y, viz_utils = self._build_tensors(url, df)
 
                 self.data = Data(x=x, edge_index=edge_index, y=y)
-                self.data.pos = viz_utils
-
                 torch.save(self.data, os.path.join(self.processed_dir, f'data_{i}.pt'))
+
+                # save another file with variables needed for visualization
+                self.data.pos = viz_utils
+                torch.save(self.data, os.path.join(self.processed_dir, f'data_viz_{i}.pt'))
 
 
     def len(self):
-        return 2500
+        return (len(os.listdir(self.processed_dir)) - 2) // 2
 
 
     def _read_csv(self, path: str) -> pd.DataFrame:
@@ -245,7 +258,7 @@ class PhishingDataset(Dataset):
         # log_success(f'{root_url} processed.')
 
         return (
-            torch.tensor([from_, to_]),
+            torch.tensor([from_, to_]).type(torch.LongTensor),
             torch.tensor(x),
             torch.tensor(edges_),
             torch.tensor(df.loc[root_url].is_phishing),
@@ -254,7 +267,7 @@ class PhishingDataset(Dataset):
         
 
     def get(self, idx):
-        return torch.load(os.path.join(os.path.join(self.root, 'processed'), f'data_{idx}.pt'))
+        return torch.load(os.path.join(self.processed_dir, self.file_name(idx)))
 
         
     @property
