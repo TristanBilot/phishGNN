@@ -67,7 +67,7 @@ class PhishingDataset(Dataset):
             return
 
         # loop over all files in `raw_file_names`
-        for i, raw_path in enumerate(self.raw_paths):
+        for raw_path in self.raw_paths:
             df = self._read_csv(raw_path)
             df = self._normalize_features(df)
 
@@ -75,15 +75,13 @@ class PhishingDataset(Dataset):
             df = df.set_index('url')
 
             # loop over each root urls in the dataset
-            for _, url in tqdm(root_urls.items(), total=len(root_urls)):
+            for i, (_, url) in enumerate(tqdm(root_urls.items(), total=len(root_urls))):
                 edge_index, x, _, y, viz_utils = self._build_tensors(url, df)
 
                 self.data = Data(x=x, edge_index=edge_index, y=y)
                 self.data.pos = viz_utils
 
                 torch.save(self.data, os.path.join(self.processed_dir, f'data_{i}.pt'))
-                # if i == 10:
-                #     break
 
 
     def len(self):
