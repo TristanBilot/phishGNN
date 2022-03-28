@@ -11,12 +11,17 @@ from torch_geometric.nn import GINConv, global_add_pool
 
 
 class GIN(torch.nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels, device):
+    def __init__(
+        self,
+        in_channels=None,
+        hidden_channels=32,
+        out_channels=None,
+        pooling_fn=global_add_pool,
+        device=None,
+    ):
         super().__init__()
 
-        if hidden_channels is None:
-            hidden_channels = 32
-
+        self.pooling_fn = pooling_fn
         self.device = device
         self.to(device)
 
@@ -48,7 +53,7 @@ class GIN(torch.nn.Module):
         x = self.conv4(x, edge_index)
         x = self.conv5(x, edge_index)
 
-        x = global_add_pool(x, batch)
+        x = self.pooling_fn(x, batch)
         self.embeddings = x
 
         x = self.lin1(x).relu()

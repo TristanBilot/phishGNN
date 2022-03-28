@@ -5,11 +5,20 @@ from torch_geometric.nn import global_mean_pool
 
 
 class ClusterGCN(torch.nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels, device, num_layers=6):
+    def __init__(
+        self,
+        in_channels=None,
+        hidden_channels=32,
+        out_channels=None,
+        device=None,
+        pooling_fn=global_mean_pool,
+        num_layers=6,
+    ):
         super().__init__()
 
-        if hidden_channels is None:
-            hidden_channels = 32
+        self.pooling_fn = pooling_fn
+        self.device = device
+        self.to(device)
 
         self.convs = torch.nn.ModuleList()
         self.batch_norms = torch.nn.ModuleList()
@@ -32,7 +41,7 @@ class ClusterGCN(torch.nn.Module):
             x = F.dropout(x, p=0.2, training=self.training)
 
         x = self.convs[-1](x, edge_index)
-        x = global_mean_pool(x, batch)
+        x = self.pooling_fn(x, batch)
         self.embeddings = x
 
         return x

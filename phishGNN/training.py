@@ -1,6 +1,11 @@
 import os
+import itertools
+import json
+from collections import defaultdict
+from pprint import pprint
 
 import torch
+import torch_geometric.nn as nn
 from dataset import PhishingDataset
 from torch_geometric.loader import DataLoader
 
@@ -66,19 +71,36 @@ if __name__ == "__main__":
         MemPool,
     ]
 
+    poolings = [
+        nn.global_mean_pool,
+        nn.global_max_pool,
+        nn.global_add_pool,
+    ]
+
+    hidden_neurons = [
+        32,
+        64,
+        128,
+    ]
+
     lr = 0.01
     weight_decay = 4e-5
-    epochs = 2
+    epochs = 10
     
-    accuracies = {}
-    for model in models:
+    accuracies = defaultdict(lambda: [])
+    for (model, pooling, neurons) in itertools.product(
+        models,
+        poolings,
+        hidden_neurons,
+    ):
         model = model(
             in_channels=dataset.num_features,
-            hidden_channels=None,
+            hidden_channels=neurons,
             out_channels=dataset.num_classes,
+            pooling_fn=pooling,
             device=device,
         )
-        # print(model)
+        print(f"\n{model.__class__.__name__}, {pooling.__name__}, {neurons}")
 
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
         loss_fn = torch.nn.CrossEntropyLoss()
@@ -96,9 +118,18 @@ if __name__ == "__main__":
             test_accs.append(test_acc)
             print(f'Epoch: {(epoch+1):03d}, Loss: {loss:.4f}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
 
-        accuracies[model.__class__] = (mean_std_error(train_accs), mean_std_error(test_accs))
+        accuracies[model.__class__.__name__].append({
+            f'{pooling.__name__}, {neurons}': {
+                'train': mean_std_error(train_accs),
+                'test':  mean_std_error(test_accs),
+            }
+        })
+
+        with open('training.logs', 'w') as logs:
+            formatted = json.dumps(accuracies, indent=2)
+            logs.write(formatted)
         
         # loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
         # plot_embeddings(model, loader)
     
-    print(accuracies)
+    pprint(accuracies)

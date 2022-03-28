@@ -5,11 +5,16 @@ from torch_geometric.nn import DeepGCNLayer, GATConv, MemPooling
 
 
 class MemPool(torch.nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels, device, dropout=0.5):
+    def __init__(
+        self,
+        in_channels=None,
+        hidden_channels=32,
+        out_channels=None,
+        pooling_fn=None,
+        device=None,
+        dropout=0.5,
+    ):
         super().__init__()
-
-        if hidden_channels is None:
-            hidden_channels = 32
 
         self.device = device
         self.to(device)

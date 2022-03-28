@@ -5,12 +5,17 @@ from torch_geometric.nn import global_mean_pool
 
 
 class GAT(torch.nn.Module):
-    def __init__(self, in_channels, hidden_channels, out_channels, device):
+    def __init__(
+        self,
+        in_channels=None,
+        hidden_channels=8,
+        out_channels=None,
+        pooling_fn=global_mean_pool,
+        device=None,
+    ):
         super(GAT, self).__init__()
 
-        if hidden_channels is None:
-            hidden_channels = 8
-
+        self.pooling_fn = pooling_fn
         self.device = device
         self.to(device)
 
@@ -26,7 +31,7 @@ class GAT(torch.nn.Module):
         x = F.dropout(x, p=0.6, training=self.training)
         x = self.conv2(x, edge_index)
 
-        x = global_mean_pool(x, batch)
+        x = self.pooling_fn(x, batch)
         self.embeddings = x
 
         return x
