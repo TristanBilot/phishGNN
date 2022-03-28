@@ -6,6 +6,7 @@ from torch_geometric.loader import DataLoader
 
 from visualization import visualize, plot_embeddings
 from models import GCN, GIN, GAT, GraphSAGE, ClusterGCN, MemPool
+from utils.utils import mean_std_error
 
 
 def fit(
@@ -67,8 +68,9 @@ if __name__ == "__main__":
 
     lr = 0.01
     weight_decay = 4e-5
-    epochs = 1
+    epochs = 2
     
+    accuracies = {}
     for model in models:
         model = model(
             in_channels=dataset.num_features,
@@ -76,7 +78,7 @@ if __name__ == "__main__":
             out_channels=dataset.num_classes,
             device=device,
         )
-        print(model)
+        # print(model)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
         loss_fn = torch.nn.CrossEntropyLoss()
@@ -84,11 +86,19 @@ if __name__ == "__main__":
         fit_fn = model.fit if hasattr(model, 'fit') else fit
         test_fn = model.test if hasattr(model, 'test') else test
 
+        train_accs, test_accs = [], []
         for epoch in range(epochs):
             loss = fit_fn(train_loader, optimizer, loss_fn, device)
             train_acc = test_fn(train_loader)
             test_acc = test_fn(test_loader)
+
+            train_accs.append(train_acc)
+            test_accs.append(test_acc)
             print(f'Epoch: {(epoch+1):03d}, Loss: {loss:.4f}, Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}')
 
+        accuracies[model.__class__] = (mean_std_error(train_accs), mean_std_error(test_accs))
+        
         # loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
         # plot_embeddings(model, loader)
+    
+    print(accuracies)

@@ -1,6 +1,8 @@
 from urllib.parse import urlparse
+from typing import List
 
 import torch
+import numpy as np
 
 
 class bcolors:
@@ -58,3 +60,10 @@ def normalize_www_prefix(url: str):
     url = remove_prefix(url, 'www.')
 
     return f'http{"s" if is_https else ""}://www.{url}'
+
+
+def mean_std_error(vals: List):
+    mean = np.mean(vals)
+    std = np.std(vals)
+    std_error = std / np.sqrt(len(vals))
+    return mean, std_error
