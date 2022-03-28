@@ -1,3 +1,4 @@
+import argparse
 import os
 import itertools
 import json
@@ -50,7 +51,7 @@ def test(model, loader):
     return correct / len(loader.dataset)
 
 
-if __name__ == "__main__":
+def train(should_plot_embeddings: bool):
     path = os.path.join(os.getcwd(), "data")
     dataset = PhishingDataset(root=path, use_process=False, visulization_mode=False)
     dataset = dataset.shuffle()
@@ -140,7 +141,17 @@ if __name__ == "__main__":
         os.makedirs("weights", exist_ok=True)
         torch.save(model, f"weights/{label}.pkl")
         
-        # loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
-        # plot_embeddings(model, loader)
+        if should_plot_embeddings:
+            loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+            plot_embeddings(model, loader)
     
     pprint(accuracies)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--plot-embeddings', action="store_false",
+        help='whether to save the embeddings in a png file during training or not')
+    args = parser.parse_args()
+
+    train(args.plot_embeddings)
