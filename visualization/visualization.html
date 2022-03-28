@@ -9,7 +9,7 @@
 		function load_graph(graph_num) {
 			if (graph_num < 0)
 				return
-			$("#includedContent").load("visualization/graphs/graph" + graph_num + ".html", function() {
+			$("#includedContent").load("graphs/graph" + graph_num + ".html", function() {
 				data = $("#graph_data")
                 if (!data.length) {
                     $("#includedContent").html("No html files found in visualization/graphs/ folder, run visualization.py first.")
