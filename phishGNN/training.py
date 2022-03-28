@@ -5,7 +5,7 @@ from dataset import PhishingDataset
 from torch_geometric.loader import DataLoader
 
 from visualization import visualize, plot_embeddings
-from models import GCN, GIN, GAT, GraphSAGE, MemPool
+from models import GCN, GIN, GAT, GraphSAGE, ClusterGCN, MemPool
 
 
 if __name__ == "__main__":
@@ -22,12 +22,18 @@ if __name__ == "__main__":
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
-    model = GraphSAGE(
+    model = ClusterGCN(
         in_channels=dataset.num_features,
-        hidden_channels=16,
+        hidden_channels=32,
         out_channels=dataset.num_classes,
         device=device,
     )
+    # model = GraphSAGE(
+    #     in_channels=dataset.num_features,
+    #     hidden_channels=16,
+    #     out_channels=dataset.num_classes,
+    #     device=device,
+    # )
     # model = GAT(
     #     in_channels=dataset.num_features,
     #     hidden_channels=8,
