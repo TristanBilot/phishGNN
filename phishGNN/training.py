@@ -5,7 +5,7 @@ from dataset import PhishingDataset
 from torch_geometric.loader import DataLoader
 
 from visualization import visualize, plot_embeddings
-from models import GCN, GIN, GAT, MemPool
+from models import GCN, GIN, GAT, GraphSAGE, MemPool
 
 
 if __name__ == "__main__":
@@ -21,7 +21,13 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+    
+    model = GraphSAGE(
+        in_channels=dataset.num_features,
+        hidden_channels=16,
+        out_channels=dataset.num_classes,
+        device=device,
+    )
     # model = GAT(
     #     in_channels=dataset.num_features,
     #     hidden_channels=8,
@@ -40,12 +46,12 @@ if __name__ == "__main__":
     #     out_channels=dataset.num_classes,
     #     device=device,
     # )
-    model = GCN(
-        in_channels=dataset.num_features,
-        hidden_channels=32,
-        out_channels=dataset.num_classes,
-        device=device,
-    )
+    # model = GCN(
+    #     in_channels=dataset.num_features,
+    #     hidden_channels=32,
+    #     out_channels=dataset.num_classes,
+    #     device=device,
+    # )
     print(model)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=4e-5)
