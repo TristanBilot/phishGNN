@@ -9,6 +9,9 @@ class GCN(torch.nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels, device):
         super(GCN, self).__init__()
 
+        if hidden_channels is None:
+            hidden_channels = 32
+
         self.device = device
         self.to(device)
         
@@ -34,37 +37,3 @@ class GCN(torch.nn.Module):
         x = self.lin(x)
 
         return x
-
-    def fit(
-        self,
-        train_loader,
-        optimizer,
-        loss_fn,
-        device,
-    ):
-        self.train()
-
-        total_loss = 0
-        for data in train_loader:
-            data = data.to(device)
-            out = self(data.x, data.edge_index, data.batch)
-            loss = loss_fn(out, data.y.long())
-            loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
-            total_loss += float(loss) * data.num_graphs
-        
-        return total_loss / len(train_loader.dataset)
-
-
-    @torch.no_grad()
-    def test(self, loader):
-        self.eval()
-
-        correct = 0
-        for data in loader:
-            out = self(data.x, data.edge_index, data.batch)  
-            pred = out.argmax(dim=1)
-            correct += int((pred == data.y).sum())
-
-        return correct / len(loader.dataset)
