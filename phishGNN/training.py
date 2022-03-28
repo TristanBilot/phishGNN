@@ -15,6 +15,7 @@ from utils.utils import mean_std_error
 
 
 def fit(
+    model,
     train_loader,
     optimizer,
     loss_fn,
@@ -36,12 +37,13 @@ def fit(
 
 
 @torch.no_grad()
-def test(loader):
+def test(model, loader):
     model.eval()
 
     correct = 0
     for data in loader:
-        out = model(data.x, data.edge_index, data.batch)  
+        data = data.to(device)
+        out = model(data.x, data.edge_index, data.batch)
         pred = out.argmax(dim=1)
         correct += int((pred == data.y).sum())
 
@@ -63,30 +65,30 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     models = [
-        # GAT,
-        # GIN,
+        GAT,
+        GIN,
         GCN_2,
         GCN_3,
-        # ClusterGCN,
+        ClusterGCN,
         GraphSAGE,
-        # MemPool,
+        MemPool,
     ]
 
     poolings = [
         nn.global_mean_pool,
-        # nn.global_max_pool,
-        # nn.global_add_pool,
+        nn.global_max_pool,
+        nn.global_add_pool,
     ]
 
     hidden_neurons = [
         16,
         32,
-        # 64,
+        64,
     ]
 
     lr = 0.01
     weight_decay = 4e-5
-    epochs = 6
+    epochs = 20
     
     accuracies = defaultdict(lambda: [])
     for (model, pooling, neurons) in itertools.product(
@@ -107,14 +109,18 @@ if __name__ == "__main__":
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
         loss_fn = torch.nn.CrossEntropyLoss()
 
-        fit_fn = model.fit if hasattr(model, 'fit') else fit
-        test_fn = model.test if hasattr(model, 'test') else test
-
         train_accs, test_accs = [], []
         for epoch in range(epochs):
-            loss = fit_fn(train_loader, optimizer, loss_fn, device)
-            train_acc = test_fn(train_loader)
-            test_acc = test_fn(test_loader)
+            if hasattr(model, 'fit'):
+                loss = model.fit(train_loader, optimizer, loss_fn, device)
+            else:
+                loss = fit(model, train_loader, optimizer, loss_fn, device)
+            if hasattr(model, 'test'):
+                train_acc = model.test(train_loader)
+                test_acc = model.test(test_loader)
+            else:
+                train_acc = test(model, train_loader)
+                test_acc = test(model, test_loader)
 
             train_accs.append(train_acc)
             test_accs.append(test_acc)
