@@ -10,7 +10,7 @@ from dataset import PhishingDataset
 from torch_geometric.loader import DataLoader
 
 from visualization import visualize, plot_embeddings
-from models import GCN, GIN, GAT, GraphSAGE, ClusterGCN, MemPool
+from models import GCN_2, GCN_3, GIN, GAT, GraphSAGE, ClusterGCN, MemPool
 from utils.utils import mean_std_error
 
 
@@ -63,29 +63,30 @@ if __name__ == "__main__":
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     models = [
-        GAT,
-        GIN,
-        GCN,
-        ClusterGCN,
+        # GAT,
+        # GIN,
+        GCN_2,
+        GCN_3,
+        # ClusterGCN,
         GraphSAGE,
-        MemPool,
+        # MemPool,
     ]
 
     poolings = [
         nn.global_mean_pool,
-        nn.global_max_pool,
-        nn.global_add_pool,
+        # nn.global_max_pool,
+        # nn.global_add_pool,
     ]
 
     hidden_neurons = [
+        16,
         32,
-        64,
-        128,
+        # 64,
     ]
 
     lr = 0.01
     weight_decay = 4e-5
-    epochs = 10
+    epochs = 6
     
     accuracies = defaultdict(lambda: [])
     for (model, pooling, neurons) in itertools.product(
@@ -100,7 +101,8 @@ if __name__ == "__main__":
             pooling_fn=pooling,
             device=device,
         )
-        print(f"\n{model.__class__.__name__}, {pooling.__name__}, {neurons}")
+        label = f"{model.__class__.__name__}_{pooling.__name__}_{neurons}"
+        print(f"\n{label}")
 
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
         loss_fn = torch.nn.CrossEntropyLoss()
@@ -128,6 +130,9 @@ if __name__ == "__main__":
         with open('training.logs', 'w') as logs:
             formatted = json.dumps(accuracies, indent=2)
             logs.write(formatted)
+        
+        os.makedirs("weights", exist_ok=True)
+        torch.save(model, f"weights/{label}.pkl")
         
         # loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
         # plot_embeddings(model, loader)

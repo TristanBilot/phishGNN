@@ -12,7 +12,7 @@ class ClusterGCN(torch.nn.Module):
         out_channels=None,
         device=None,
         pooling_fn=global_mean_pool,
-        num_layers=6,
+        nb_layers=6,
     ):
         super().__init__()
 
@@ -25,7 +25,7 @@ class ClusterGCN(torch.nn.Module):
         self.convs.append(SAGEConv(in_channels, hidden_channels))
         self.batch_norms.append(BatchNorm(hidden_channels))
 
-        for _ in range(num_layers - 2):
+        for _ in range(nb_layers - 2):
             self.convs.append(SAGEConv(hidden_channels, hidden_channels))
             self.batch_norms.append(BatchNorm(hidden_channels))
         self.convs.append(SAGEConv(hidden_channels, out_channels))

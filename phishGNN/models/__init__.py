@@ -1,6 +1,6 @@
 """GNN models implementations"""
 
-from .gcn import GCN
+from .gcn import GCN_2, GCN_3
 from .gin import GIN
 from .gat import GAT
 from .graphsage import GraphSAGE
