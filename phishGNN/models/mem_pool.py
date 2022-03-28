@@ -42,6 +42,7 @@ class MemPool(torch.nn.Module):
 
         self.mem1 = MemPooling(hidden_channels, 80, heads=5, num_clusters=10)
         self.mem2 = MemPooling(80, out_channels, heads=5, num_clusters=1)
+        self.embeddings = None
 
 
     def forward(self, x, edge_index, batch):
@@ -54,6 +55,7 @@ class MemPool(torch.nn.Module):
         x = F.leaky_relu(x)
         x = F.dropout(x, p=self.dropout)
         x, S2 = self.mem2(x)
+        self.embeddings = x.squeeze(1)
 
         return (
             F.log_softmax(x.squeeze(1), dim=-1),

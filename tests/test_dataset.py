@@ -72,7 +72,7 @@ def test_dataset_easy1():
     edge_index, x, edge_attr, y, _ = dataset._build_tensors('root', df)
 
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
-    assert [int(i[1]) for i in x] == x_should_be
+    assert [int(i[0]) for i in x] == x_should_be
     assert y == 1.
 
 
@@ -92,7 +92,7 @@ def test_dataset_easy2():
     edge_index, x, edge_attr, y, _ = dataset._build_tensors('root', df)
 
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
-    assert [int(i[1]) for i in x] == x_should_be
+    assert [int(i[0]) for i in x] == x_should_be
     assert y == 1.
 
 def test_dataset_loop1():
@@ -108,7 +108,7 @@ def test_dataset_loop1():
     edge_index, x, edge_attr, y, _ = dataset._build_tensors('root', df)
 
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
-    assert [int(i[1]) for i in x] == x_should_be
+    assert [int(i[0]) for i in x] == x_should_be
     assert y == 1.
 
 def test_dataset_loop2():
@@ -124,7 +124,7 @@ def test_dataset_loop2():
     edge_index, x, edge_attr, y, _ = dataset._build_tensors('root', df)
 
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
-    assert [int(i[1]) for i in x] == x_should_be
+    assert [int(i[0]) for i in x] == x_should_be
     assert y == 1.
 
 def test_dataset_missing1():
@@ -138,7 +138,7 @@ def test_dataset_missing1():
     edge_index, x, edge_attr, y, _ = dataset._build_tensors('root', df)
 
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
-    assert [int(i[1]) for i in x] == x_should_be
+    assert [int(i[0]) for i in x] == x_should_be
     assert y == 1.
 
 def test_dataset_missing2():
@@ -153,7 +153,7 @@ def test_dataset_missing2():
     edge_index, x, edge_attr, y, _ = dataset._build_tensors('root', df)
 
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
-    assert [int(i[1]) for i in x] == x_should_be
+    assert [int(i[0]) for i in x] == x_should_be
     assert y == 1.
 
 def test_dataset_normalize_url():
@@ -165,3 +165,5 @@ def test_dataset_normalize_url():
     assert dataset._normalize_url('test.com') == "http://www.test.com"
     assert dataset._normalize_url("http://www.test.com/") == "http://www.test.com"
     assert dataset._normalize_url("http://www.test.com") == "http://www.test.com"
+
+test_dataset_easy1()

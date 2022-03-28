@@ -17,6 +17,7 @@ class GCN(torch.nn.Module):
         self.conv2 = GCNConv(hidden_channels, hidden_channels)
         self.conv3 = GCNConv(hidden_channels, hidden_channels)
         self.lin = Linear(hidden_channels, out_channels)
+        self.embeddings = None
 
     def forward(self, x, edge_index, batch):
         x = x.float()
@@ -27,6 +28,7 @@ class GCN(torch.nn.Module):
         x = self.conv3(x, edge_index)
 
         x = global_mean_pool(x, batch)  # [batch_size, hidden_channels]
+        self.embeddings = x
 
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.lin(x)

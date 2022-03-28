@@ -36,6 +36,7 @@ class GIN(torch.nn.Module):
 
         self.lin1 = Linear(hidden_channels, hidden_channels)
         self.lin2 = Linear(hidden_channels, out_channels)
+        self.embeddings = None
 
     def forward(self, x, edge_index, batch):
         x = x.float()
@@ -44,7 +45,10 @@ class GIN(torch.nn.Module):
         x = self.conv3(x, edge_index)
         x = self.conv4(x, edge_index)
         x = self.conv5(x, edge_index)
+
         x = global_add_pool(x, batch)
+        self.embeddings = x
+
         x = self.lin1(x).relu()
         x = F.dropout(x, p=0.5, training=self.training)
         x = self.lin2(x)

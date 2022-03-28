@@ -3,15 +3,16 @@ import glob
 import os
 from typing import Dict, Set
 
-from pyvis.network import Network
+import matplotlib.pyplot as plt
 import networkx as nx
 import torch
-from tqdm import tqdm
+from pyvis.network import Network
+from sklearn.manifold import TSNE
 from torch_geometric.data import Data
+from tqdm import tqdm
 
-from utils.utils import tensor_to_tuple_list, extract_domain_name
 from dataset import PhishingDataset
-
+from utils.utils import extract_domain_name, tensor_to_tuple_list
 
 ROOT_COLOR          = '#0096FF'
 DOMAIN_COLOR        = '#73FCD6'
@@ -116,6 +117,24 @@ def generate_every_graphs():
         visualize(data, html_save_file=f"graphs/graph{i}.html")
 
     print(f"Graphs successfully created.")
+
+
+def plot_embeddings(
+    model,
+    loader,
+):
+    color_list = ["red", "green"]
+    embs = []
+    colors = []
+    for data in loader:
+        pred = model(data.x, data.edge_index, data.batch)
+        embs.append(model.embeddings)
+        colors += [color_list[int(y)] for y in data.y]
+    embs = torch.cat(embs, dim=0)
+
+    xs, ys = zip(*TSNE().fit_transform(embs.detach().numpy()))
+    plt.scatter(xs, ys, color=colors)
+    plt.savefig("embeddings.png")
 
 
 if __name__ == "__main__":
