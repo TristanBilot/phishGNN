@@ -111,9 +111,18 @@ class PhishingDataset(Dataset):
             parse_dates=['domain_creation_date'],
             date_parser=date_parser,
         )
+
+        # equilibrate dataset classes as 50/50% benign/phishing
+        nb_phishing = len(df[df['is_phishing'] == 1])
+        benign = df.index[(df['is_phishing'] == 0)][:nb_phishing]
+        other = df.index[~(df['is_phishing'] == 0)]
+        df = pd.concat([df.iloc[benign], df.iloc[other]])
+
+        # cast object dtypes
         df['url'] = df['url'].astype('string')
         df['cert_country'] = df['cert_country'].astype('string')
 
+        # remove useless features
         del df['status_code']
         del df['depth']
         del df['domain_creation_date']
@@ -247,7 +256,7 @@ class PhishingDataset(Dataset):
                 visited.add((url, ref, i))
 
             # remove url and refs
-            features = node[:-1]
+            features = node.drop("refs").drop("is_phishing")
             id_to_feat[url_to_id[url]] = features
         
         x = [id_to_feat[k] for k in sorted(id_to_feat)] # (n, d)
