@@ -61,18 +61,9 @@ class PhishingDataset(Dataset):
             return f'data_viz_{idx}.pt'
         return f'data_{idx}.pt'
 
-    def download(self):
-        pass
-
     def process(self):
         """Reads csv files in data/raw and preprocess so that output
         preprocessed files are written in data/processed folder.
-
-        Side effects:
-            self.data.pos = {
-                "url_to_id": url_to_id,
-                "error_pages": error_pages,
-            } contains data needed fdorthe visualization of the graphs.
         """
         if not self.use_process:
             return
@@ -158,14 +149,6 @@ class PhishingDataset(Dataset):
                 ref['url'] = self._normalize_url(ref['url'])
             return refs
 
-        # def str_to_float(col: pd.Series):
-        #     col = col.fillna(self.nan_value)
-        #     s = set(col.unique())
-        #     s = {e: i for i, e in enumerate(s)}
-            
-        #     col = col.apply(lambda x: s[x])
-        #     return min_max_scaling(col)
-
         # normalize int & float columns
         num_column_idxs = [i for i, dt in enumerate(df.dtypes) if dt in [int, float]]
         df.iloc[:, num_column_idxs] = \
@@ -179,19 +162,12 @@ class PhishingDataset(Dataset):
             "has_sub_domain", "has_at_symbol", "is_valid_html", "has_form_with_url",
             "has_iframe", "use_mouseover", "is_cert_valid", "has_dns_record",
             "has_whois", "path_starts_with_url"]
-        # bool_column_idxs = [i for i, dt in enumerate(df.dtypes) if dt == bool]
         df[bool_columns] = df[bool_columns].apply(bool_to_int, axis=0)
 
         # normalize urls
         df['refs'] = df['refs'].apply(normalize_refs)
         df['url'] = df['url'].apply(self._normalize_url)
         df = df.drop_duplicates(subset='url', keep='first')
-
-        # ignore url
-        # no_url = df.iloc[: , 1:]
-        # str_column_idxs = [i + 1 for i, dt in enumerate(no_url.iloc[: , 1:].dtypes) if dt == "string"]
-        # no_url.iloc[:, str_column_idxs] = no_url.iloc[:, str_column_idxs].apply(str_to_float, axis=0)
-        # df.iloc[: , 1:] = no_url
 
         return df
 
@@ -223,9 +199,7 @@ class PhishingDataset(Dataset):
             url = queue.pop()
             try:
                 node = df.loc[url]
-                # log_success(f'{url} found in features.')
             except KeyError:
-                # log_fail(f'{url} not found in features.')
                 node = self.error_page_node_feature
 
             refs = node.refs
@@ -233,19 +207,12 @@ class PhishingDataset(Dataset):
 
             for i, edge in enumerate(refs):
                 ref = edge['url']
-                # nb_hrefs = edge['nb_edges']
                 if (url, ref, i) in visited:
                     break
                 if ref not in df.index:
                     error_pages.add(ref)
                 map_url_to_id(ref)
-                # try:
-                #     node = df.loc[ref]
-                #     log_success(f'{ref} found in features.')
-                # except KeyError:
-                #     log_fail(f'{ref} not found in features.')
-                #     continue
-                #     node = self.error_page_node_feature
+
                 from_.append(url_to_id[url])
                 to_.append(url_to_id[ref])
                 edges_.append([1]) # should be edge features
@@ -259,12 +226,11 @@ class PhishingDataset(Dataset):
             features = node.drop("refs").drop("is_phishing")
             id_to_feat[url_to_id[url]] = features
         
-        x = [id_to_feat[k] for k in sorted(id_to_feat)] # (n, d)
+        x = [id_to_feat[k] for k in sorted(id_to_feat)]
         visualization = {
             "url_to_id": url_to_id,
             "error_pages": error_pages,
         }
-        # log_success(f'{root_url} processed.')
 
         return (
             torch.tensor([from_, to_]).type(torch.LongTensor),
@@ -318,85 +284,3 @@ class PhishingDataset(Dataset):
         url = url.rstrip('/')
         url = normalize_www_prefix(url)
         return url
-
-        # while len(queue) != 0:
-        #     ref = queue.pop()
-        #     node = df[ref]
-
-        # for ref, edge_feats in refs.items():
-        #     if ref not in idxs:
-        #         idxs[ref] = idx
-        #         idx += 1
-        #     from_.append(idxs[url])
-        #     to_.append(idxs[ref])
-        #     edges_.append([1]) # should be edge features
-
-        # # remove url and refs
-        # features = row[2:-1]
-        # id_to_feat[idxs[url]] = features
-
-
-
-
-
-        
-    # @property
-    # def raw_file_names(self):
-    #     """ If this file exists in raw_dir, the download is not triggered.
-    #         (The download func. is not implemented here)  
-    #     """
-    #     return self.filename
-
-    # @property
-    # def processed_file_names(self):
-    #     """ If these files are found in raw_dir, processing is skipped"""
-    #     self.data = pd.read_csv(self.raw_paths[0]).reset_index()
-
-    #     if self.test:
-    #         return [f'data_test_{i}.pt' for i in list(self.data.index)]
-    #     else:
-    #         return [f'data_{i}.pt' for i in list(self.data.index)]
-        
-
-    # def download(self):
-    #     pass
-
-    # def process(self):
-    #     self.data = pd.read_csv(self.raw_paths[0]).reset_index()
-    #     featurizer = dc.feat.MolGraphConvFeaturizer(use_edges=True)
-    #     for index, mol in tqdm(self.data.iterrows(), total=self.data.shape[0]):
-    #         # Featurize molecule
-    #         f = featurizer.featurize(mol["smiles"])
-    #         data = f[0].to_pyg_graph()
-    #         data.y = self._get_label(mol["HIV_active"])
-    #         data.smiles = mol["smiles"]
-    #         if self.test:
-    #             torch.save(data, 
-    #                 os.path.join(self.processed_dir, 
-    #                              f'data_test_{index}.pt'))
-    #         else:
-    #             torch.save(data, 
-    #                 os.path.join(self.processed_dir, 
-    #                              f'data_{index}.pt'))
-            
-
-    # def _get_label(self, label):
-    #     label = np.asarray([label])
-    #     return torch.tensor(label, dtype=torch.int64)
-
-    # def len(self):
-    #     return self.data.shape[0]
-
-    # def get(self, idx):
-    #     """ - Equivalent to __getitem__ in pytorch
-    #         - Is not needed for PyG's InMemoryDataset
-    #     """
-    #     if self.test:
-    #         data = torch.load(os.path.join(self.processed_dir, 
-    #                              f'data_test_{idx}.pt'))
-    #     else:
-    #         data = torch.load(os.path.join(self.processed_dir, 
-    #                              f'data_{idx}.pt'))        
-    #     return data
-
-
