@@ -5,7 +5,7 @@ from dataset import PhishingDataset
 from torch_geometric.loader import DataLoader
 
 from visualization import visualize, plot_embeddings
-from models import GCN, GIN, MemPool
+from models import GCN, GIN, GAT, MemPool
 
 
 if __name__ == "__main__":
@@ -22,31 +22,37 @@ if __name__ == "__main__":
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    model = MemPool(
-        in_channels=dataset.num_features,
-        hidden_channels=32,
-        out_channels=dataset.num_classes,
-        device=device,
-    )
+    # model = GAT(
+    #     in_channels=dataset.num_features,
+    #     hidden_channels=8,
+    #     out_channels=dataset.num_classes,
+    #     device=device,
+    # )
+    # model = MemPool(
+    #     in_channels=dataset.num_features,
+    #     hidden_channels=32,
+    #     out_channels=dataset.num_classes,
+    #     device=device,
+    # )
     # model = GIN(
     #     in_channels=dataset.num_features,
     #     hidden_channels=32,
     #     out_channels=dataset.num_classes,
     #     device=device,
     # )
-    # model = GCN(
-    #     in_channels=dataset.num_node_features,
-    #     hidden_channels=32,
-    #     out_channels=dataset.num_classes,
-    #     device=device,
-    # )
+    model = GCN(
+        in_channels=dataset.num_features,
+        hidden_channels=32,
+        out_channels=dataset.num_classes,
+        device=device,
+    )
     print(model)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=4e-5)
     loss_fn = torch.nn.CrossEntropyLoss()
 
 
-    for epoch in range(1, 2):
+    for epoch in range(1, 5):
         loss = model.fit(train_loader, optimizer, loss_fn, device)
         train_acc = model.test(train_loader)
         test_acc = model.test(test_loader)
