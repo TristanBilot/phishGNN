@@ -114,7 +114,7 @@ def generate_every_graphs():
     dataset = dataset.shuffle()
     print(f"Start generating graphs...")
     for i, data in enumerate(tqdm(dataset, total=len(dataset))):
-        visualize(data, html_save_file=f"graphs/graph{i}.html")
+        visualize(data, html_save_file=f"visualization/graphs/graph{i}.html")
 
     print(f"Graphs successfully created.")
 
