@@ -31,7 +31,7 @@ if __name__ == '__main__':
     parser.add_argument('url', type=str, help='the url to predict (phishing/benign)')
     parser.add_argument('pkl_file', type=str, default="GCN_3_global_mean_pool_32.pkl",
         help='the path to the model weights (.pkl)')
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     pred = predict(args.url, args.weights_file)
     

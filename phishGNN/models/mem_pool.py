@@ -88,7 +88,7 @@ class MemPool(torch.nn.Module):
 
 
     @torch.no_grad()
-    def test(self, loader):
+    def test(self, loader, device):
         self.eval()
         correct = 0
         for data in loader:

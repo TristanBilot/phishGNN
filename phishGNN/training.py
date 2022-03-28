@@ -38,7 +38,7 @@ def fit(
 
 
 @torch.no_grad()
-def test(model, loader):
+def test(model, loader, device):
     model.eval()
 
     correct = 0
@@ -89,7 +89,7 @@ def train(should_plot_embeddings: bool):
 
     lr = 0.01
     weight_decay = 4e-5
-    epochs = 20
+    epochs = 1
     
     accuracies = defaultdict(lambda: [])
     for (model, pooling, neurons) in itertools.product(
@@ -117,11 +117,11 @@ def train(should_plot_embeddings: bool):
             else:
                 loss = fit(model, train_loader, optimizer, loss_fn, device)
             if hasattr(model, 'test'):
-                train_acc = model.test(train_loader)
-                test_acc = model.test(test_loader)
+                train_acc = model.test(train_loader, device)
+                test_acc = model.test(test_loader, device)
             else:
-                train_acc = test(model, train_loader)
-                test_acc = test(model, test_loader)
+                train_acc = test(model, train_loader, device)
+                test_acc = test(model, test_loader, device)
 
             train_accs.append(train_acc)
             test_accs.append(test_acc)
@@ -134,12 +134,14 @@ def train(should_plot_embeddings: bool):
             }
         })
 
-        with open('training.logs', 'w') as logs:
+        out_path = os.path.join("weights", f"{epochs}_epochs")
+        os.makedirs(out_path, exist_ok=True)
+
+        with open(os.path.join(out_path, f"accuracies_{epochs}_epochs.json"), 'w') as logs:
             formatted = json.dumps(accuracies, indent=2)
             logs.write(formatted)
         
-        os.makedirs("weights", exist_ok=True)
-        torch.save(model, f"weights/{label}.pkl")
+        torch.save(model, f"{out_path}/{label}.pkl")
         
         if should_plot_embeddings:
             loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
@@ -150,8 +152,8 @@ def train(should_plot_embeddings: bool):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--plot-embeddings', action="store_false",
+    parser.add_argument('--plot-embeddings', action="store_true",
         help='whether to save the embeddings in a png file during training or not')
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
 
     train(args.plot_embeddings)
