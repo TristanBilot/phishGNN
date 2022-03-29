@@ -11,7 +11,7 @@ from dataset import PhishingDataset
 from torch_geometric.loader import DataLoader
 
 from visualization import visualize, plot_embeddings
-from models import GCN_2, GCN_3, GIN, GAT, GraphSAGE, ClusterGCN, MemPool
+from models import GCN_2, GCN_3, GIN, GAT, MLP, GraphSAGE, ClusterGCN, MemPool
 from utils.utils import mean_std_error
 
 
@@ -66,6 +66,7 @@ def train(should_plot_embeddings: bool):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     models = [
+        MLP,
         GAT,
         GIN,
         GCN_2,
