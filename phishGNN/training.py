@@ -15,6 +15,7 @@ from torch_geometric.loader import DataLoader
 from visualization import visualize, plot_embeddings
 from models import GCN_2, GCN_3, GIN, GAT, GraphSAGE, ClusterGCN, MemPool
 from utils.utils import mean_std_error
+from loader import train_test_loader
 
 
 def fit(
@@ -55,7 +56,8 @@ def test(model, loader, device):
 
 def test_model(
     weights_file: str,
-    use_process: bool=True,
+    use_process: bool=False,
+    should_plot_embeddings: bool=False,
 ) -> float:
     """Searches for crawled data as csv files in data/test/raw/
     and then load and process a dataset on these data in order
@@ -68,10 +70,7 @@ def test_model(
     Returns:
         float: the accuracy of the model on these data
     """
-    path = os.path.join(os.getcwd(), "data", "test")
-    dataset = PhishingDataset(root=path, use_process=use_process)
-
-    loader = DataLoader(dataset, batch_size=64, shuffle=False)
+    _, test_loader = train_test_loader(use_process)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     model = torch.load(
@@ -79,42 +78,29 @@ def test_model(
         map_location=torch.device('cpu'))
     model.eval()
 
+    if should_plot_embeddings:
+        plot_embeddings(model, test_loader)
+        return
+
     correct = 0
-    for data in loader:
+    for data in test_loader:
         out = model(data.x, data.edge_index, data.batch)
         pred = out.argmax(dim=1)
         correct += int((pred == data.y).sum())
     
-    accuracy = correct / len(loader.dataset)
+    accuracy = correct / len(test_loader.dataset)
     return accuracy
 
 
 
 def train(
-    should_plot_embeddings: bool=False,
     use_process: bool=False,
 ):
-    path = os.path.join(os.getcwd(), "data", "train")
-    dataset = PhishingDataset2(root=path, use_process=use_process)
-    dataset = dataset.shuffle()
-
-    train_test = 0.9
-    train_dataset = dataset[:int(len(dataset) * train_test)]
-    test_dataset1 = dataset[int(len(dataset) * train_test):]
-
-    test_path = os.path.join(os.getcwd(), "data", "test")
-    test_dataset2 = PhishingDataset2(root=test_path, use_process=use_process)
-    test_dataset = torch.utils.data.ConcatDataset([test_dataset1, test_dataset2])
-
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
-
+    train_loader, test_loader = train_test_loader(use_process)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     models = [
-        MLP,
-        GAT,
-        GIN,
+        # MLP,
         GCN_2,
         GCN_3,
         ClusterGCN,
@@ -194,24 +180,24 @@ def train(
         
         torch.save(model, f"{out_path}/{label}.pkl")
         
-        if should_plot_embeddings:
-            loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
-            plot_embeddings(model, loader)
-    
     pprint(accuracies)
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('--training', action="store_true", help='if set, a training will be run from data/train/raw')
-    # parser.add_argument('--test', action="store_true", help='if set, a test will be run from data/test/raw')
-    # parser.add_argument('--plot-embeddings', action="store_true",
-    #     help='whether to save the embeddings in a png file during training or not')
-    # args, _ = parser.parse_known_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--training', action="store_true", help='if set, a training will be run from data/train/raw')
+    parser.add_argument('--test', action="store_true", help='if set, a test will be run from data/test/raw')
+    parser.add_argument('--plot-embeddings', action="store_true",
+        help='whether to save the embeddings in a png file during training or not')
+    args, _ = parser.parse_known_args()
 
-    # if args.test is not None:
-    #     accuracy = test_model("20_epochs_default/ClusterGCN_global_max_pool_32.pkl")
-    #     print(accuracy)
-    # else:
-    #     train(args.plot_embeddings)
-    train(use_process=True)
+    if args.test:
+        accuracy = test_model(
+            "2_epochs/GCN_2_global_mean_pool_32.pkl",
+            should_plot_embeddings=args.plot_embeddings)
+        print(accuracy)
+    else:
+        train(args.plot_embeddings)
+    # train(use_process=False)
+    #  accuracy = test_model("20_epochs_default/ClusterGCN_global_max_pool_32.pkl")
+    #  print(accuracy)
