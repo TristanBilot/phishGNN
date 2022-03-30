@@ -28,12 +28,51 @@ class MLP(nn.Module):
 
     def forward(self, x, edge_index, batch):
         x = x.float()
-        x = self.flatten(x)
-        x = nn.Linear(x.shape[1], 2 * self.hidden_channels)(x)
+        x = x[0]
+        # only use first features (root url features)
+        x = nn.Linear(x.shape[0], 2 * self.hidden_channels)(x)
         x = self.relu(x)
         x = self.lin(x)
         x = self.relu(x)
 
-        x = self.pooling_fn(x, batch)
         x = self.lin_out(x)
         return x
+
+
+    def fit(
+        model,
+        train_loader,
+        optimizer,
+        loss_fn,
+        device,
+        dont_use_graphs: bool=False,
+    ):
+        model.train()
+
+        total_loss = 0
+        for data in train_loader:
+            data = data.to(device)
+            out = model(data.x, data.edge_index, data.batch)
+            # only use first features (root url features)
+            loss = loss_fn(out, data.y[0].long())
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+            total_loss += float(loss) * data.num_graphs
+        
+        return total_loss / len(train_loader.dataset)
+
+
+    @torch.no_grad()
+    def test(model, loader, device):
+        model.eval()
+
+        correct = 0
+        for data in loader:
+            data = data.to(device)
+            out = model(data.x, data.edge_index, data.batch)
+            # dim -1 instead of 1
+            pred = out.argmax(dim=-1)
+            correct += int((pred == data.y).sum())
+
+        return correct / len(loader.dataset)
