@@ -8,11 +8,12 @@ from pprint import pprint
 
 import torch
 import torch_geometric.nn as nn
-from dataset import PhishingDataset
+from dataset_v1 import PhishingDataset
+from dataset_v2 import PhishingDataset2
 from torch_geometric.loader import DataLoader
 
 from visualization import visualize, plot_embeddings
-from models import GCN_2, GCN_3, GIN, GAT, MLP, GraphSAGE, ClusterGCN, MemPool
+from models import GCN_2, GCN_3, GIN, GAT, GraphSAGE, ClusterGCN, MemPool
 from utils.utils import mean_std_error
 
 
@@ -94,7 +95,7 @@ def train(
     use_process: bool=False,
 ):
     path = os.path.join(os.getcwd(), "data", "train")
-    dataset = PhishingDataset(root=path, use_process=use_process)
+    dataset = PhishingDataset2(root=path, use_process=use_process)
     dataset = dataset.shuffle()
 
     train_test = 0.9
@@ -102,7 +103,7 @@ def train(
     test_dataset1 = dataset[int(len(dataset) * train_test):]
 
     test_path = os.path.join(os.getcwd(), "data", "test")
-    test_dataset2 = PhishingDataset(root=test_path, use_process=False)
+    test_dataset2 = PhishingDataset2(root=test_path, use_process=use_process)
     test_dataset = torch.utils.data.ConcatDataset([test_dataset1, test_dataset2])
 
     train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
@@ -201,15 +202,16 @@ def train(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--training', action="store_true", help='if set, a training will be run from data/train/raw')
-    parser.add_argument('--test', action="store_true", help='if set, a test will be run from data/test/raw')
-    parser.add_argument('--plot-embeddings', action="store_true",
-        help='whether to save the embeddings in a png file during training or not')
-    args, _ = parser.parse_known_args()
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument('--training', action="store_true", help='if set, a training will be run from data/train/raw')
+    # parser.add_argument('--test', action="store_true", help='if set, a test will be run from data/test/raw')
+    # parser.add_argument('--plot-embeddings', action="store_true",
+    #     help='whether to save the embeddings in a png file during training or not')
+    # args, _ = parser.parse_known_args()
 
-    if args.test is not None:
-        accuracy = test_model("20_epochs_default/ClusterGCN_global_max_pool_32.pkl")
-        print(accuracy)
-    else:
-        train(args.plot_embeddings)
+    # if args.test is not None:
+    #     accuracy = test_model("20_epochs_default/ClusterGCN_global_max_pool_32.pkl")
+    #     print(accuracy)
+    # else:
+    #     train(args.plot_embeddings)
+    train(use_process=True)

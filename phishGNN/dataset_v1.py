@@ -1,16 +1,14 @@
 import glob
-import json
 import os
-from typing import Dict, List
 
-import numpy as np
 import pandas as pd
 import torch
 import torch_geometric
 from torch_geometric.data import Data, Dataset
 from tqdm import tqdm
 
-from utils.utils import log_fail, log_success, normalize_www_prefix
+import dataprep
+from utils.utils import normalize_www_prefix
 
 print(f"Torch version: {torch.__version__}")
 print(f"Cuda available: {torch.cuda.is_available()}")
@@ -26,8 +24,6 @@ class PhishingDataset(Dataset):
         use_process: bool=True,
         visulization_mode: bool=False,
         nan_value: float=-1.0,
-        max_depth: int=1,
-        test=False,
         transform=None,
         pre_transform=None,
     ):
@@ -38,8 +34,6 @@ class PhishingDataset(Dataset):
         self.use_process = use_process
         self.visulization_mode = visulization_mode
         self.nan_value = nan_value
-        self.max_depth = max_depth
-        self.test = test
         super(PhishingDataset, self).__init__(root, transform, pre_transform)
 
     @property
@@ -70,8 +64,8 @@ class PhishingDataset(Dataset):
 
         # loop over all files in `raw_file_names`
         for raw_path in self.raw_paths:
-            df = self._read_csv(raw_path)
-            df = self._normalize_features(df)
+            df = dataprep.read_csv(raw_path)
+            df = dataprep.normalize_features(df)
 
             root_urls = df[~df['is_phishing'].isin([self.nan_value])]['url']
             df = df.set_index('url')
@@ -90,86 +84,6 @@ class PhishingDataset(Dataset):
 
     def len(self):
         return (len(os.listdir(self.processed_dir)) - 4) // 2
-
-
-    def _read_csv(self, path: str) -> pd.DataFrame:
-        """Opens the csv dataset as DataFrame and cast types.
-        """
-        date_parser = lambda c: pd.to_datetime(c, format='%Y-%m-%dT%H:%M:%SZ', errors='coerce')
-        df = pd.read_csv(
-            path,
-            index_col=False,
-            parse_dates=['domain_creation_date'],
-            date_parser=date_parser,
-        )
-
-        # equilibrate dataset classes as 50/50% benign/phishing
-        nb_phishing = len(df[df['is_phishing'] == 1])
-        benign = df.index[(df['is_phishing'] == 0)][:nb_phishing]
-        other = df.index[~(df['is_phishing'] == 0)]
-        df = pd.concat([df.iloc[benign], df.iloc[other]])
-
-        # cast object dtypes
-        df['url'] = df['url'].astype('string')
-        df['cert_country'] = df['cert_country'].astype('string')
-
-        # remove useless features
-        del df['status_code']
-        del df['depth']
-        del df['domain_creation_date']
-        del df['cert_country'] # TODO: handle cert_country and sort by "dangerous" country
-        return df
-
-
-    def _normalize_features(self, df: pd.DataFrame):
-        """Pre-processes every feature so that they are normalized
-        adn scaled between 0 and 1 range.
-
-        Args:
-            df: the dataframe to normalize
-
-        Returns:
-            DataFrame: the normalized dataframe
-        """
-        def bool_to_int(col: pd.Series):
-            def wrapper(x):
-                if np.isnan(x) or x not in [True, False]:
-                    return self.nan_value
-                return 1 if x == True else 0
-            return col.apply(wrapper)
-        
-        def min_max_scaling(col: pd.Series):
-            min = col.min()
-            max = col.max()
-            return col.apply(lambda x: (x - min) / (max - min))
-
-        def normalize_refs(refs: List[Dict]):
-            refs = json.loads(refs)
-            for ref in refs:
-                ref['url'] = self._normalize_url(ref['url'])
-            return refs
-
-        # normalize int & float columns
-        num_column_idxs = [i for i, dt in enumerate(df.dtypes) if dt in [int, float]]
-        df.iloc[:, num_column_idxs] = \
-            df.iloc[:, num_column_idxs].apply(min_max_scaling, axis=0)
-
-        # replace NaN values for non-string columns
-        df.iloc[:, num_column_idxs] = df.iloc[:, num_column_idxs].fillna(self.nan_value)
-
-        # normalize bool columns
-        bool_columns = ["is_phishing", "is_https", "is_ip_address", "is_error_page",
-            "has_sub_domain", "has_at_symbol", "is_valid_html", "has_form_with_url",
-            "has_iframe", "use_mouseover", "is_cert_valid", "has_dns_record",
-            "has_whois", "path_starts_with_url"]
-        df[bool_columns] = df[bool_columns].apply(bool_to_int, axis=0)
-
-        # normalize urls
-        df['refs'] = df['refs'].apply(normalize_refs)
-        df['url'] = df['url'].apply(self._normalize_url)
-        df = df.drop_duplicates(subset='url', keep='first')
-
-        return df
 
 
     def _build_tensors(self, root_url: str, df: pd.DataFrame):

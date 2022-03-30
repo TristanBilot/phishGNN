@@ -11,7 +11,7 @@ from sklearn.manifold import TSNE
 from torch_geometric.data import Data
 from tqdm import tqdm
 
-from dataset import PhishingDataset
+from dataset_v1 import PhishingDataset
 from utils.utils import extract_domain_name, tensor_to_tuple_list
 
 ROOT_COLOR          = '#0096FF'
