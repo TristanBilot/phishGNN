@@ -131,9 +131,9 @@ def train(
         hidden_neurons,
     ):
         model = model(
-            in_channels=dataset.num_features,
+            in_channels=train_loader.dataset.num_features,
             hidden_channels=neurons,
-            out_channels=dataset.num_classes,
+            out_channels=train_loader.dataset.num_classes,
             pooling_fn=pooling,
             device=device,
         )
