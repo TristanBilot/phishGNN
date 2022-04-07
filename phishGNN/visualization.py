@@ -94,21 +94,15 @@ def generate_every_graphs():
     for every example in the dataset (based on the files
     in data/processed).
     """
-    path = os.path.join(os.getcwd(), "data")
+    path = os.path.join(os.getcwd(), "data", "train")
     data_files = sorted(glob.glob(os.path.join(path, "processed", "data_viz*")))
-    use_process = False
 
     if not os.path.exists(path) or len(data_files) == 0:
-        print(f"Warning: no data files found in {path}, processing the dataset...")
-        raw_files = sorted(glob.glob(os.path.join(path, "raw", "*")))
-        if len(raw_files) == 0:
-            raise FileNotFoundError(f"No csv raw files found in {os.path.join(path, 'raw')}")
-        print(f"{len(raw_files)} file(s) found in {os.path.join(path, 'raw')}")
-        use_process = True
+        print(f"No csv raw files found in {path}")
 
     dataset = PhishingDataset(
         root=path,
-        use_process=use_process,
+        use_process=False,
         visulization_mode=True,
     )
     dataset = dataset.shuffle()
