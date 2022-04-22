@@ -6,3 +6,6 @@ root/
 graphs/
 .vscode/
 *.pt
+*.pkl
+*.png
+*.svg

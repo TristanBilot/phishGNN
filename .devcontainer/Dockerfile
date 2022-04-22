@@ -24,6 +24,9 @@ RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/
 
 COPY requirements.txt requirements.txt
 
+RUN apt-get update
+RUN apt-get install -y libcairo2-dev libjpeg-dev libgif-dev
+
 RUN pip install -r requirements.txt
 RUN pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.11.0+cpu.html
 

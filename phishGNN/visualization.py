@@ -10,6 +10,7 @@ from pyvis.network import Network
 from sklearn.manifold import TSNE
 from torch_geometric.data import Data
 from tqdm import tqdm
+import igraph
 
 from dataset_v1 import PhishingDataset
 from utils.utils import extract_domain_name, tensor_to_tuple_list
@@ -25,6 +26,7 @@ def visualize(
     width: int=1000,
     height: int=800,
     html_save_file: str="graph.html",
+    generate_svg: bool=False,
 ):
     """Create an html file with the corresponding graph
     plotted using the pyvis library.
@@ -48,6 +50,7 @@ def visualize(
 
     root_url = id_to_url[0]
     domain = extract_domain_name(root_url)
+    colors = []
     for node in net.nodes:
         node_url = id_to_url[node['id']]
         node['size'] = 15
@@ -60,6 +63,7 @@ def visualize(
             node['color'] = ROOT_COLOR
         if node_url in viz_utils['error_pages']:
             node['color'] = ERROR_COLOR
+        colors.append(node['color'])
 
         node['title'] = f'<a href="{id_to_url[node["id"]]}">{id_to_url[node["id"]]}</a>'
 
@@ -74,8 +78,28 @@ def visualize(
         if nb_occurences > 1:
             e['label'] = nb_occurences
 
-    net.save_graph(html_save_file)
+    if generate_svg:
+        g2 = igraph.Graph().from_networkx(G)
+        g2 = g2.simplify()
+        layout = g2.layout_auto()
 
+        visual_style={}
+        visual_style["vertex_size"] = 10
+        visual_style["vertex_color"] = colors
+        visual_style["vertex_label_dist"] =1
+        visual_style["vertex_label_size"]= 8
+
+        visual_style["edge_color"] = "lightgrey"
+        visual_style["edge_width"] = 1
+        visual_style["edge_curved"] = 0.1
+
+        visual_style["layout"]=layout
+        visual_style["bbox"]=(500,500)
+        visual_style["margin"]=40
+
+        igraph.plot(g2, target=f"text{len(data.x)}.svg", **visual_style)
+
+    net.save_graph(html_save_file)
     with open(html_save_file, 'a') as html_file:
         graph_data_html = f"""
             <div id="graph_data" 

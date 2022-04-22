@@ -162,7 +162,7 @@ class PhishingDataset2(Dataset):
                 visited.add((url, ref, i))
 
             # remove url and refs
-            features = [node['is_phishing']]
+            features = [node['is_phishing_pred']]
             id_to_feat[url_to_id[url]] = features
         
         x = [id_to_feat[k] for k in sorted(id_to_feat)]

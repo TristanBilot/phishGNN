@@ -69,10 +69,11 @@ class PhishingDataset(Dataset):
 
             root_urls = df[~df['is_phishing'].isin([self.nan_value])]['url']
             df = df.set_index('url')
+            df_to_dict = df.to_dict("index")
 
             # loop over each root urls in the dataset
             for i, (_, url) in enumerate(tqdm(root_urls.items(), total=len(root_urls))):
-                edge_index, x, _, y, viz_utils = self._build_tensors(url, df)
+                edge_index, x, _, y, viz_utils = self._build_tensors(url, df_to_dict, df.index)
 
                 self.data = Data(x=x, edge_index=edge_index, y=y)
                 torch.save(self.data, os.path.join(self.processed_dir, f'data_{i}.pt'))
@@ -86,7 +87,7 @@ class PhishingDataset(Dataset):
         return (len(os.listdir(self.processed_dir)) - 4) // 2
 
 
-    def _build_tensors(self, root_url: str, df: pd.DataFrame):
+    def _build_tensors(self, root_url: str, df_to_dict, existing_urls):
         """Builds the required tensors for one graph.
         Theses matrices will be then used for training the GNN.
 
@@ -112,18 +113,18 @@ class PhishingDataset(Dataset):
                 break
             url = queue.pop()
             try:
-                node = df.loc[url]
+                node = df_to_dict[url]
             except KeyError:
                 node = self.error_page_node_feature
 
-            refs = node.refs
+            refs = node['refs']
             map_url_to_id(url)
 
             for i, edge in enumerate(refs):
                 ref = edge['url']
                 if (url, ref, i) in visited:
                     break
-                if ref not in df.index:
+                if ref not in existing_urls:
                     error_pages.add(ref)
                 map_url_to_id(ref)
 
@@ -137,7 +138,8 @@ class PhishingDataset(Dataset):
                 visited.add((url, ref, i))
 
             # remove url and refs
-            features = node.drop("refs").drop("is_phishing")
+            features = [v for k, v in sorted(node.items()) \
+                if k not in ['refs', 'is_phishing']]
             id_to_feat[url_to_id[url]] = features
         
         x = [id_to_feat[k] for k in sorted(id_to_feat)]
@@ -150,7 +152,7 @@ class PhishingDataset(Dataset):
             torch.tensor([from_, to_]).type(torch.LongTensor),
             torch.tensor(x),
             torch.tensor(edges_),
-            torch.tensor(df.loc[root_url].is_phishing),
+            torch.tensor(df_to_dict[root_url]['is_phishing']),
             visualization,
         )
         
