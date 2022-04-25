@@ -2,8 +2,11 @@
 
 Phishing website detection using Graph Neural Networks (GNNs).
 
-<img width="40%" alt="phishing_graph" src="https://user-images.githubusercontent.com/40337775/160821966-c9c53dfe-8c54-4390-ac47-24975047d87a.png">
-
+<p float="left">
+    <img width="35%" alt="phishing_graph" src="https://user-images.githubusercontent.com/40337775/165151501-0c0f37b0-c055-4085-b640-3a86e4c9a7d8.svg">
+    <img width="35%" alt="phishing_graph" src="https://user-images.githubusercontent.com/40337775/165151748-4dca6de8-104f-4f1b-b03e-9054a1e399f4.svg">
+</p>
+    
 ## Installation
 
 ### Clone the repo
