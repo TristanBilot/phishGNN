@@ -73,7 +73,7 @@ class PhishingDataset2(Dataset):
             X_test = [*X_test, *X_eval]
             y_test = [*y_test, *y_eval]
 
-            forest = train_random_forest(X_train, X_test, y_train, y_test)
+            forest, _ = train_random_forest(X_train, X_test, y_train, y_test)
             
             every_urls, every_features = dataprep.load_every_urls_with_features(df, raw_path)
             every_preds = forest.predict(every_features)
