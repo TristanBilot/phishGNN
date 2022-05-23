@@ -23,3 +23,11 @@ def train_test_loader(use_process: bool):
     test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
     
     return train_loader, test_loader
+
+
+def get_full_dataset(use_process: bool):
+    path = os.path.join(os.getcwd(), "data", "train")
+    dataset = PhishingDataset2(root=path, use_process=use_process)
+    dataset = dataset.shuffle()
+
+    return dataset

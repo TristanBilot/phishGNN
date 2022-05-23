@@ -16,7 +16,8 @@ from torch_geometric.loader import DataLoader
 from visualization import visualize, plot_embeddings
 from models import GCN_2, GCN_3, GIN, GAT, GraphSAGE, ClusterGCN, MemPool
 from utils.utils import mean_std_error
-from loader import train_test_loader
+from loader import train_test_loader, get_full_dataset
+from cross_validation import cross_validation_with_val_set
 
 
 def fit(
@@ -105,12 +106,14 @@ def train(
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     models = [
-        # MLP,
+        GAT,
+        GIN,
         GCN_2,
         GCN_3,
+        
         ClusterGCN,
         GraphSAGE,
-        MemPool,
+        # MemPool,
     ]
 
     poolings = [
@@ -188,10 +191,73 @@ def train(
     pprint(accuracies)
 
 
+
+def train_cross_entropy(
+    use_process: bool=False,
+):
+    dataset = get_full_dataset(use_process=use_process)
+
+    models = [
+        GAT,
+        GIN,
+        GCN_2,
+        GCN_3,
+        
+        ClusterGCN,
+        GraphSAGE,
+        # MemPool,
+    ]
+
+    poolings = [
+        nn.global_mean_pool,
+        nn.global_max_pool,
+        nn.global_add_pool,
+    ]
+
+    hidden_neurons = [
+        16,
+        32,
+        64,
+    ]
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
+    for (model, pooling, neurons) in itertools.product(
+        models,
+        poolings,
+        hidden_neurons,
+    ):
+        model = model(
+            in_channels=dataset.num_features,
+            hidden_channels=neurons,
+            out_channels=dataset.num_classes,
+            pooling_fn=pooling,
+            device=device,
+        )
+        model = model.to(device)
+        label = f"{model.__class__.__name__}_{pooling.__name__}_{neurons}"
+        print(f"\n{label}")
+
+        loss_fn = torch.nn.CrossEntropyLoss()
+        
+        cross_validation_with_val_set(
+            dataset,
+            model,
+            loss_fn,
+            folds=5,
+            epochs=11,
+            batch_size=32,
+            lr=.01,
+            lr_decay_factor=.95,
+            lr_decay_step_size=3,
+            weight_decay=4e-5,
+        )
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--training', action="store_true", help='if set, a training will be run from data/train/raw')
     parser.add_argument('--test', action="store_true", help='if set, a test will be run from data/test/raw')
+    parser.add_argument('--process-dataset', action="store_true", help='if set, a training will be run from data/train/raw')
     parser.add_argument('--plot-embeddings', action="store_true",
         help='whether to save the embeddings in a png file during training or not')
     args, _ = parser.parse_known_args()
@@ -202,7 +268,4 @@ if __name__ == "__main__":
             should_plot_embeddings=args.plot_embeddings)
         print(accuracy)
     else:
-        train(args.plot_embeddings)
-    # train(use_process=False)
-    #  accuracy = test_model("20_epochs_default/ClusterGCN_global_max_pool_32.pkl")
-    #  print(accuracy)
+        train_cross_entropy(args.process_dataset)
