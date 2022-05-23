@@ -35,3 +35,7 @@ class GraphSAGE(nn.Module):
         self.embeddings = x
 
         return x
+
+    def reset_parameters(self):
+        self.conv1.reset_parameters()
+        self.conv2.reset_parameters()

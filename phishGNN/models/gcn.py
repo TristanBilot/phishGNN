@@ -48,6 +48,11 @@ class GCN(torch.nn.Module):
 
         return x
 
+    def reset_parameters(self):
+        for layer in self.convs:
+            layer.reset_parameters()
+        self.lin.reset_parameters()
+
 
 class GCN_2(GCN):
     def __init__(

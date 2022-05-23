@@ -61,3 +61,12 @@ class GIN(torch.nn.Module):
         x = self.lin2(x)
         
         return x
+
+    def reset_parameters(self):
+        self.conv1.reset_parameters()
+        self.conv2.reset_parameters()
+        self.conv3.reset_parameters()
+        self.conv4.reset_parameters()
+        self.conv5.reset_parameters()
+        self.lin1.reset_parameters()
+        self.lin2.reset_parameters()

@@ -45,3 +45,9 @@ class ClusterGCN(torch.nn.Module):
         self.embeddings = x
 
         return x
+
+    def reset_parameters(self):
+        for layer in self.convs:
+            layer.reset_parameters()
+        for layer in self.batch_norms:
+            layer.reset_parameters()

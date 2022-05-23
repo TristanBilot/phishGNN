@@ -97,3 +97,10 @@ class MemPool(torch.nn.Module):
             pred = out.argmax(dim=-1)
             correct += int((pred == data.y).sum())
         return correct / len(loader.dataset)
+
+    def reset_parameters(self):
+        for layer in self.convs:
+            layer.reset_parameters()
+        self.lin.reset_parameters()
+        self.mem1.reset_parameters()
+        self.mem2.reset_parameters()
