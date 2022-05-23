@@ -10,6 +10,7 @@ import torch
 import torch_geometric.nn as nn
 from dataset_v1 import PhishingDataset
 from dataset_v2 import PhishingDataset2
+from sklearn.metrics import confusion_matrix
 from torch_geometric.loader import DataLoader
 
 from visualization import visualize, plot_embeddings
@@ -83,11 +84,15 @@ def test_model(
         return
 
     correct = 0
+    truths, preds = [], []
     for data in test_loader:
         out = model(data.x, data.edge_index, data.batch)
         pred = out.argmax(dim=1)
         correct += int((pred == data.y).sum())
-    
+        truths.extend(data.y.tolist())
+        preds.extend(pred.tolist())
+        
+    print(confusion_matrix(truths, preds))
     accuracy = correct / len(test_loader.dataset)
     return accuracy
 
