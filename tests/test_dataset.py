@@ -1,21 +1,19 @@
-import pytest
 import os
 import sys
 from typing import List, Tuple
 
 import pandas as pd
 import torch
-from torch import Tensor
 
 sys.path.append(os.path.join(os.getcwd(), 'phishGNN'))
 
-from dataset import PhishingDataset
+from dataset_v1 import PhishingDataset
 
 
 def dataframe_mock(rows: List[Tuple[str, List, str]]):
     refs = [[{"url": ref, "nb_edges": 1} for ref in row[1]] for row in rows]
     urls = [row[0] for row in rows]
-    
+
     features = [
         # 'depth',
         'is_phishing',
@@ -95,6 +93,7 @@ def test_dataset_easy2():
     assert [int(i[0]) for i in x] == x_should_be
     assert y == 1.
 
+
 def test_dataset_loop1():
     df = dataframe_mock([
         ("root", ["a", "b"], 2),
@@ -110,6 +109,7 @@ def test_dataset_loop1():
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
     assert [int(i[0]) for i in x] == x_should_be
     assert y == 1.
+
 
 def test_dataset_loop2():
     df = dataframe_mock([
@@ -127,6 +127,7 @@ def test_dataset_loop2():
     assert [int(i[0]) for i in x] == x_should_be
     assert y == 1.
 
+
 def test_dataset_missing1():
     df = dataframe_mock([
         ("root", ["a"], 2),
@@ -140,6 +141,7 @@ def test_dataset_missing1():
     assert torch.all(torch.eq(edge_index, torch.tensor(idx_should_be)))
     assert [int(i[0]) for i in x] == x_should_be
     assert y == 1.
+
 
 def test_dataset_missing2():
     df = dataframe_mock([
@@ -156,6 +158,7 @@ def test_dataset_missing2():
     assert [int(i[0]) for i in x] == x_should_be
     assert y == 1.
 
+
 def test_dataset_normalize_url():
     dataset = PhishingDataset("root")
     assert dataset._normalize_url('http://test.com') == "http://www.test.com"
@@ -165,5 +168,6 @@ def test_dataset_normalize_url():
     assert dataset._normalize_url('test.com') == "http://www.test.com"
     assert dataset._normalize_url("http://www.test.com/") == "http://www.test.com"
     assert dataset._normalize_url("http://www.test.com") == "http://www.test.com"
+
 
 test_dataset_easy1()
