@@ -9,3 +9,5 @@ graphs/
 *.pkl
 *.png
 *.svg
+filter*
+*.icloud

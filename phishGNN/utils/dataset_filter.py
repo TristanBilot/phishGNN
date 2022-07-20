@@ -1,16 +1,18 @@
 from typing import List
-import requests
 
 import pandas as pd
+import requests
 from bs4 import BeautifulSoup
+from requests import Response
 
 
-def remove_prefix(text, prefix):
+def remove_prefix(text:str, prefix:str) -> str:
     if text.startswith(prefix):
         return text[len(prefix):]
     return text
 
-def get_request(url):
+
+def get_request(url:str) -> Response:
     try:
         res = requests.get(url, timeout=(3, 30))
         print(res, url)
@@ -19,7 +21,7 @@ def get_request(url):
         return None
 
 
-def is_phishable(url: str):
+def is_phishable(url: str) -> bool:
     res = get_request(url)
     if res is None:
         return False
@@ -33,12 +35,15 @@ def is_phishable(url: str):
     return has_form or has_input or has_textarea
 
 
-def save_filtered_urls(i: int, filtered_urls: List[str], path: str):
-    with open(path, 'w') as file:
+def save_filtered_urls(i: int, filtered_urls: List[str], path: str) -> None:
+    # https://docs.python.org/3/library/functions.html#open
+    # 'w' open for writing, truncating the file first
+    # 'a' open for writing, appending to the end of file if it exists
+    with open(path, 'a') as file:
         file.write('\n'.join([str(i), *filtered_urls]))
 
 
-def apply_prefix(url: str):
+def apply_prefix(url: str) -> str:
     is_https = url.startswith('https://')
     url = remove_prefix(url, 'https://')
     url = remove_prefix(url, 'http://')
@@ -51,7 +56,7 @@ def filter(path, dataset):
     df = pd.read_csv(path + dataset)
 
     filtered_urls = []
-    for i, url in enumerate(df['url']):
+    for i, url in enumerate(df['domain']):
         url = apply_prefix(url)
         
         if is_phishable(url):

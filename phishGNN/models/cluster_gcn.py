@@ -1,18 +1,20 @@
 import torch
 import torch.nn.functional as F
+from torch import device, Tensor
 from torch_geometric.nn import BatchNorm, SAGEConv
 from torch_geometric.nn import global_mean_pool
+from torch_geometric.typing import Adj, OptTensor
 
 
 class ClusterGCN(torch.nn.Module):
     def __init__(
-        self,
-        in_channels=None,
-        hidden_channels=32,
-        out_channels=None,
-        device=None,
-        pooling_fn=global_mean_pool,
-        nb_layers=6,
+            self,
+            in_channels: int = None,
+            hidden_channels: int = 32,
+            out_channels: int = None,
+            device: device = None,
+            pooling_fn: callable = global_mean_pool,
+            nb_layers: int = 6,
     ):
         super().__init__()
 
@@ -32,8 +34,8 @@ class ClusterGCN(torch.nn.Module):
 
         self.embeddings = None
 
-    def forward(self, x, edge_index, batch):
-        x = x.float()
+    def forward(self, x: Tensor, edge_index: Adj, batch: OptTensor) -> Tensor:
+        x = x.to(dtype=torch.float32)
         for conv, batch_norm in zip(self.convs[:-1], self.batch_norms):
             x = conv(x, edge_index)
             x = batch_norm(x)

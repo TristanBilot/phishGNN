@@ -1,32 +1,32 @@
 import collections
 import glob
 import os
-from typing import Dict, Set
 
+import igraph
 import matplotlib.pyplot as plt
 import networkx as nx
 import torch
 from pyvis.network import Network
 from sklearn.manifold import TSNE
+from torch.utils.data import DataLoader
 from torch_geometric.data import Data
 from tqdm import tqdm
-import igraph
 
 from dataset_v1 import PhishingDataset
 from utils.utils import extract_domain_name, tensor_to_tuple_list
 
-ROOT_COLOR          = '#0096FF'
-DOMAIN_COLOR        = '#73FCD6'
-OUT_DOMAIN_COLOR    = '#FFD479'
-ERROR_COLOR         = '#FF7E79'
+ROOT_COLOR = '#0096FF'
+DOMAIN_COLOR = '#73FCD6'
+OUT_DOMAIN_COLOR = '#FFD479'
+ERROR_COLOR = '#FF7E79'
 
 
 def visualize(
-    data: Data,
-    width: int=1000,
-    height: int=800,
-    html_save_file: str="graph.html",
-    generate_svg: bool=False,
+        data: Data,
+        width: int = 1000,
+        height: int = 800,
+        html_save_file: str = "graph.html",
+        generate_svg: bool = False,
 ):
     """Create an html file with the corresponding graph
     plotted using the pyvis library.
@@ -83,19 +83,19 @@ def visualize(
         g2 = g2.simplify()
         layout = g2.layout_auto()
 
-        visual_style={}
+        visual_style = {}
         visual_style["vertex_size"] = 10
         visual_style["vertex_color"] = colors
-        visual_style["vertex_label_dist"] =1
-        visual_style["vertex_label_size"]= 8
+        visual_style["vertex_label_dist"] = 1
+        visual_style["vertex_label_size"] = 8
 
         visual_style["edge_color"] = "lightgrey"
         visual_style["edge_width"] = 1
         visual_style["edge_curved"] = 0.1
 
-        visual_style["layout"]=layout
-        visual_style["bbox"]=(500,500)
-        visual_style["margin"]=40
+        visual_style["layout"] = layout
+        visual_style["bbox"] = (500, 500)
+        visual_style["margin"] = 40
 
         igraph.plot(g2, target=f"text{len(data.x)}.svg", **visual_style)
 
@@ -113,7 +113,7 @@ def visualize(
         html_file.write(graph_data_html)
 
 
-def generate_every_graphs():
+def generate_every_graphs() -> None:
     """Creates the visulaization graphs as html files
     for every example in the dataset (based on the files
     in data/processed).
@@ -126,7 +126,7 @@ def generate_every_graphs():
 
     dataset = PhishingDataset(
         root=path,
-        use_process=False,
+        do_data_preparation=False,
         visulization_mode=True,
     )
     dataset = dataset.shuffle()
@@ -137,10 +137,7 @@ def generate_every_graphs():
     print(f"Graphs successfully created.")
 
 
-def plot_embeddings(
-    model,
-    loader,
-):
+def plot_embeddings(model: torch.nn.Module, loader: DataLoader) -> None:
     color_list = ["red", "green"]
     embs = []
     colors = []
