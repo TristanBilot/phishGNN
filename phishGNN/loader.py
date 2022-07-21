@@ -8,7 +8,7 @@ from dataset_v2 import PhishingDataset2
 
 
 def train_test_loader(do_data_preparation: bool):
-    path = os.path.join(os.getcwd(), "data", "train")
+    path = os.path.join(os.getcwd(), 'data', 'train')
     dataset = PhishingDataset2(root=path, do_data_preparation=do_data_preparation)
     dataset = dataset.shuffle()
 
@@ -16,7 +16,7 @@ def train_test_loader(do_data_preparation: bool):
     train_dataset = dataset[:int(len(dataset) * train_test)]
     test_dataset1 = dataset[int(len(dataset) * train_test):]
 
-    test_path = os.path.join(os.getcwd(), "data", "test")
+    test_path = os.path.join(os.getcwd(), 'data', 'test')
     test_dataset2 = PhishingDataset2(root=test_path, do_data_preparation=do_data_preparation)
     test_dataset = torch.utils.data.ConcatDataset([test_dataset1, test_dataset2])
 
@@ -27,7 +27,7 @@ def train_test_loader(do_data_preparation: bool):
 
 
 def get_full_dataset(do_data_preparation: bool) -> Dataset:
-    path = os.path.join(os.getcwd(), "data", "train")
+    path = os.path.join(os.getcwd(), 'data', 'train')
     dataset = PhishingDataset2(root=path, do_data_preparation=do_data_preparation)
     dataset = dataset.shuffle()
 

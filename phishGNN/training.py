@@ -73,12 +73,13 @@ def test_model(
     _, test_loader = train_test_loader(do_data_preparation)
 
     model = torch.load(
-        os.path.join(os.getcwd(), "weights", weights_file),
+        os.path.join(os.getcwd(), 'weights', weights_file),
         map_location=COMPUTE_DEVICE_CPU)
     model.eval()
 
     if should_plot_embeddings:
         plot_embeddings(model, test_loader)
+        # FIXME: is this return needed?
         return
 
     correct = 0
@@ -139,8 +140,8 @@ def train(do_data_preparation: bool = False) -> None:
             device=COMPUTE_DEVICE,
         )
         model = model.to(COMPUTE_DEVICE)
-        label = f"{model.__class__.__name__}_{pooling.__name__}_{neurons}"
-        print(f"\n{label}")
+        label = f'{model.__class__.__name__}_{pooling.__name__}_{neurons}'
+        print(f'\n{label}')
 
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
         loss_fn = torch.nn.CrossEntropyLoss()
@@ -172,14 +173,14 @@ def train(do_data_preparation: bool = False) -> None:
             }
         })
 
-        out_path = os.path.join("weights", f"{epochs}_epochs")
+        out_path = os.path.join('weights', f'{epochs}_epochs')
         os.makedirs(out_path, exist_ok=True)
 
-        with open(os.path.join(out_path, f"accuracies_{epochs}_epochs.json"), 'w') as logs:
+        with open(os.path.join(out_path, f'accuracies_{epochs}_epochs.json'), 'w') as logs:
             formatted = json.dumps(accuracies, indent=2)
             logs.write(formatted)
 
-        torch.save(model, f"{out_path}/{label}.pkl")
+        torch.save(model, f'{out_path}/{label}.pkl')
 
     pprint(accuracies)
 
@@ -223,8 +224,8 @@ def train_cross_entropy(do_data_preparation: bool = False) -> None:
             device=COMPUTE_DEVICE,
         )
         model = model.to(COMPUTE_DEVICE)
-        label = f"{model.__class__.__name__}_{pooling.__name__}_{neurons}"
-        print(f"\n{label}")
+        label = f'{model.__class__.__name__}_{pooling.__name__}_{neurons}'
+        print(f'\n{label}')
 
         loss_fn = torch.nn.CrossEntropyLoss()
 
@@ -242,21 +243,21 @@ def train_cross_entropy(do_data_preparation: bool = False) -> None:
         )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test', action="store_true", help='if set, a test will be run from data/test/raw')
-    parser.add_argument('--process-dataset', action="store_true",
+    parser.add_argument('--test', action='store_true', help='if set, a test will be run from data/test/raw')
+    parser.add_argument('--process-dataset', action='store_true',
                         help='if set to True, a training data will be taken and prepared from data/train/raw; '
                              'otherwise the data is expected to be present in serialized form '
                              'in data/test.processed and data/train.processed folders',
                         default=False)
-    parser.add_argument('--plot-embeddings', action="store_true",
+    parser.add_argument('--plot-embeddings', action='store_true',
                         help='whether to save the embeddings in a png file during training or not')
     args, _ = parser.parse_known_args()
 
     if args.test:
         accuracy = test_model(
-            "2_epochs/GCN_2_global_mean_pool_32.pkl",
+            '2_epochs/GCN_2_global_mean_pool_32.pkl',
             should_plot_embeddings=args.plot_embeddings)
         print(accuracy)
     else:
