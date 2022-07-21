@@ -25,7 +25,7 @@ def visualize(
         data: Data,
         width: int = 1000,
         height: int = 800,
-        html_save_file: str = "graph.html",
+        html_save_file: str = 'graph.html',
         generate_svg: bool = False,
 ):
     """Create an html file with the corresponding graph
@@ -84,20 +84,20 @@ def visualize(
         layout = g2.layout_auto()
 
         visual_style = {}
-        visual_style["vertex_size"] = 10
-        visual_style["vertex_color"] = colors
-        visual_style["vertex_label_dist"] = 1
-        visual_style["vertex_label_size"] = 8
+        visual_style['vertex_size'] = 10
+        visual_style['vertex_color'] = colors
+        visual_style['vertex_label_dist'] = 1
+        visual_style['vertex_label_size'] = 8
 
-        visual_style["edge_color"] = "lightgrey"
-        visual_style["edge_width"] = 1
-        visual_style["edge_curved"] = 0.1
+        visual_style['edge_color'] = 'lightgrey'
+        visual_style['edge_width'] = 1
+        visual_style['edge_curved'] = 0.1
 
-        visual_style["layout"] = layout
-        visual_style["bbox"] = (500, 500)
-        visual_style["margin"] = 40
+        visual_style['layout'] = layout
+        visual_style['bbox'] = (500, 500)
+        visual_style['margin'] = 40
 
-        igraph.plot(g2, target=f"text{len(data.x)}.svg", **visual_style)
+        igraph.plot(g2, target=f'text{len(data.x)}.svg', **visual_style)
 
     net.save_graph(html_save_file)
     with open(html_save_file, 'a') as html_file:
@@ -118,27 +118,27 @@ def generate_every_graphs() -> None:
     for every example in the dataset (based on the files
     in data/processed).
     """
-    path = os.path.join(os.getcwd(), "data", "train")
-    data_files = sorted(glob.glob(os.path.join(path, "processed", "data_viz*")))
+    path = os.path.join(os.getcwd(), 'data', 'train')
+    data_files = sorted(glob.glob(os.path.join(path, 'processed', 'data_viz*')))
 
     if not os.path.exists(path) or len(data_files) == 0:
-        print(f"No csv raw files found in {path}")
+        print(f'No csv raw files found in {path}')
 
     dataset = PhishingDataset(
         root=path,
         do_data_preparation=False,
-        visulization_mode=True,
+        visualization_mode=True,
     )
     dataset = dataset.shuffle()
-    print(f"Start generating graphs...")
+    print(f'Start generating graphs...')
     for i, data in enumerate(tqdm(dataset, total=len(dataset))):
-        visualize(data, html_save_file=f"visualization/graphs/graph{i}.html")
+        visualize(data, html_save_file=f'visualization/graphs/graph{i}.html')
 
-    print(f"Graphs successfully created.")
+    print(f'Graphs successfully created.')
 
 
 def plot_embeddings(model: torch.nn.Module, loader: DataLoader) -> None:
-    color_list = ["red", "green"]
+    color_list = ['red', 'green']
     embs = []
     colors = []
     for data in loader:
@@ -149,8 +149,8 @@ def plot_embeddings(model: torch.nn.Module, loader: DataLoader) -> None:
 
     xs, ys = zip(*TSNE().fit_transform(embs.detach().numpy()))
     plt.scatter(xs, ys, color=colors)
-    plt.savefig("embeddings.png")
+    plt.savefig('embeddings.png')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     generate_every_graphs()

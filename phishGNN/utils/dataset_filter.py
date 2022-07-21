@@ -28,10 +28,10 @@ def is_phishable(url: str) -> bool:
 
     html = res.text
     soup = BeautifulSoup(html, 'html.parser')
-    has_form = soup.find('form') != None
-    has_input = soup.find('input') != None
-    has_textarea = soup.find('textarea') != None
-    
+    has_form = soup.find('form') is not None
+    has_input = soup.find('input') is not None
+    has_textarea = soup.find('textarea') is not None
+
     return has_form or has_input or has_textarea
 
 
@@ -56,26 +56,26 @@ def filter(path, dataset):
     df = pd.read_csv(path + dataset)
 
     filtered_urls = []
-    for i, url in enumerate(df['domain']):
+    for i, url in enumerate(df['url']):
         url = apply_prefix(url)
         
         if is_phishable(url):
             filtered_urls.append(url)
         
         if i % 5 == 0:
-            save_filtered_urls(i, filtered_urls, f"filtered_{dataset}")
+            save_filtered_urls(i, filtered_urls, f'filtered_{dataset}')
 
 
-assert apply_prefix('http://test.com') == "http://www.test.com"
-assert apply_prefix('https://test.com') == "https://www.test.com"
-assert apply_prefix('https://www.test.com') == "https://www.test.com"
-assert apply_prefix('www.test.com') == "http://www.test.com"
-assert apply_prefix('test.com') == "http://www.test.com"
+assert apply_prefix('http://test.com') == 'http://www.test.com'
+assert apply_prefix('https://test.com') == 'https://www.test.com'
+assert apply_prefix('https://www.test.com') == 'https://www.test.com'
+assert apply_prefix('www.test.com') == 'http://www.test.com'
+assert apply_prefix('test.com') == 'http://www.test.com'
 
 
 if __name__ == '__main__':
-    path = "data/"
-    dataset = "kaggle_PhishingAndLegitimateURLs.csv"
+    path = 'data/'
+    dataset = 'kaggle_PhishingAndLegitimateURLs.csv'
 
     # dataset = "phishtank_dataset_merged.csv"
     filter(path, dataset)

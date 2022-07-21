@@ -19,9 +19,16 @@ cd phishGNN
 ### Install dependencies
 
 ```python
-./install_dataset.sh
+python3 -m venv venv
+. venv/bin/activate
+pip install wheel
 pip install -r requirements.txt
-pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.11.0+cpu.html # for cpu
+pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.12.0+cpu.html # for cpu
+```
+
+### unzip the dataset
+```shell
+./install_dataset.sh
 ```
 
 ## Dataset & crawler

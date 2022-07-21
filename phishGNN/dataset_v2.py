@@ -13,9 +13,9 @@ import dataprep
 from other_models import train_random_forest
 from utils.compute_device import COMPUTE_DEVICE
 
-print(f"Torch version: {torch.__version__}")
-print(f"Compute device: {COMPUTE_DEVICE}")
-print(f"Torch geometric version: {torch_geometric.__version__}")
+print(f'Torch version: {torch.__version__}')
+print(f'Compute device: {COMPUTE_DEVICE}')
+print(f'Torch geometric version: {torch_geometric.__version__}')
 
 # set default dtype, as MPS Pytorch does not support float64
 torch.set_default_dtype(torch.float32)
@@ -28,7 +28,7 @@ class PhishingDataset2(Dataset):
             self,
             root: str,
             do_data_preparation: bool = True,
-            visulization_mode: bool = False,
+            visualization_mode: bool = False,
             nan_value: float = -1.0,
             transform=None,
             pre_transform=None,
@@ -38,25 +38,25 @@ class PhishingDataset2(Dataset):
         into raw_dir (downloaded dataset) and processed_dir (processed data). 
         """
         self.do_data_preparation = do_data_preparation
-        self.visulization_mode = visulization_mode
+        self.visualization_mode = visualization_mode
         self.nan_value = nan_value
         super(PhishingDataset2, self).__init__(root, transform, pre_transform)
 
     @property
     def raw_file_names(self) -> list[str]:
         """File name of the csv dataset. """
-        return glob.glob(os.path.join(self.raw_dir, "*"))
+        return glob.glob(os.path.join(self.raw_dir, '*'))
 
     @property
     def processed_file_names(self) -> list[str]:
-        return [file + ".pt" for file in self.raw_file_names]
+        return [file + '.pt' for file in self.raw_file_names]
 
     @property
     def num_classes(self):
         return 2
 
     def file_name(self, idx: int) -> str:
-        if self.visulization_mode:
+        if self.visualization_mode:
             return f'data_viz_{idx}.pt'
         return f'data_{idx}.pt'
 
@@ -70,7 +70,7 @@ class PhishingDataset2(Dataset):
         # loop over all files in `raw_file_names`
         for raw_path in self.raw_paths:
             df, X, y = dataprep.load_train_set(raw_path)
-            df_eval, X_eval, y_eval = dataprep.load_train_set("data/test/raw/evaloutput.csv")
+            df_eval, X_eval, y_eval = dataprep.load_train_set('data/test/raw/evaloutput.csv')
 
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
             X_test = [*X_test, *X_eval]
@@ -84,11 +84,11 @@ class PhishingDataset2(Dataset):
             root_urls = df[~df['is_phishing'].isin([self.nan_value])]['url']
 
             df.drop(df.iloc[:, 2:-1], inplace=True, axis=1)
-            df["url"]: every_urls
-            df["is_phishing_pred"] = every_preds
+            df['url']: every_urls
+            df['is_phishing_pred'] = every_preds
 
             df = df.set_index('url')
-            df_to_dict = df.to_dict("index")
+            df_to_dict = df.to_dict('index')
 
             # loop over each root urls in the dataset
             for i, (_, url) in enumerate(tqdm(root_urls.items(), total=len(root_urls))):
@@ -167,8 +167,8 @@ class PhishingDataset2(Dataset):
 
         x = [id_to_feat[k] for k in sorted(id_to_feat)]
         visualization = {
-            "url_to_id": url_to_id,
-            "error_pages": error_pages,
+            'url_to_id': url_to_id,
+            'error_pages': error_pages,
         }
 
         return (
@@ -183,7 +183,7 @@ class PhishingDataset2(Dataset):
         t = torch.load(os.path.join(self.processed_dir, self.file_name(idx)))
         t.x = t.x.to(dtype=torch.float32)
         t.y = t.y.to(dtype=torch.int64)
-        t.edge = t.to(dtype=torch.int64)
+        t.edge_index = t.edge_index.to(dtype=torch.int64)
         return t
 
     @property

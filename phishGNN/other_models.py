@@ -15,11 +15,15 @@ import dataprep
 
 
 # from models.ffn import FeedforwardNeuralNetModel
+from .models import FeedforwardNeuralNetModel
 
 
 def warn(*args, **kwargs):
     pass
+
+
 import warnings
+
 warnings.warn = warn
 
 
@@ -29,7 +33,7 @@ def train_random_forest(X_train, X_test, y_train, y_test):
 
     y_pred = clf.predict(X_test)
     acc = metrics.accuracy_score(y_test, y_pred)
-    print("Accuracy:", acc)
+    print('Accuracy:', acc)
     return clf, acc
 
 
@@ -39,17 +43,17 @@ def train_logistic_regression(X_train, X_test, y_train, y_test):
 
     y_pred = reg.predict(X_test)
     acc = metrics.accuracy_score(y_test, y_pred)
-    print("Accuracy:", acc)
+    print('Accuracy:', acc)
     return reg, acc
 
 
 def train_svm(X_train, X_test, y_train, y_test):
-    svm = SVC(kernel = 'rbf', random_state = 0)
+    svm = SVC(kernel='rbf', random_state=0)
     svm.fit(X_train, y_train)
 
     y_pred = svm.predict(X_test)
     acc = metrics.accuracy_score(y_test, y_pred)
-    print("Accuracy:", acc)
+    print('Accuracy:', acc)
     return svm, acc
 
 
@@ -75,26 +79,26 @@ def train_ffn(X_train, X_test, y_train, y_test, epochs=50):
     return model, test_accs
 
 
-def do_experiments(n: int=10):
-    df, X, y = dataprep.load_train_set("data/train/raw/both.csv")
+def do_experiments(n: int = 10):
+    df, X, y = dataprep.load_train_set('data/train/raw/both.csv')
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
 
     names = [
-        "Nearest Neighbors",
-        "Linear SVM",
-        "RBF SVM",
-        "Decision Tree",
-        "Random Forest",
-        "Neural Net",
-        "AdaBoost",
-        "Naive Bayes",
-        "QDA",
-        "LogisticRegression",
+        'Nearest Neighbors',
+        'Linear SVM',
+        'RBF SVM',
+        'Decision Tree',
+        'Random Forest',
+        'Neural Net',
+        'AdaBoost',
+        'Naive Bayes',
+        'QDA',
+        'LogisticRegression',
     ]
 
     classifiers = [
         KNeighborsClassifier(3),
-        SVC(kernel="linear", C=0.025),
+        SVC(kernel='linear', C=0.025),
         SVC(gamma=2, C=1),
         DecisionTreeClassifier(max_depth=5),
         RandomForestClassifier(n_estimators=100),
@@ -113,10 +117,9 @@ def do_experiments(n: int=10):
             acc = metrics.accuracy_score(y_test, y_pred)
             samples.append(acc)
         print(f'{names[i]:20} \t{np.mean(samples)} +- {np.std(samples)}')
-    
+
     _, ffns = train_ffn(X_train, X_test, y_train, y_test, epochs=n)
     print(f'Feed Forward: \t{np.mean(ffns)} +- {np.std(ffns)}')
-
 
 
 if __name__ == '__main__':
