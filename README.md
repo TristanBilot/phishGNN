@@ -24,6 +24,11 @@ pip install -r requirements.txt
 pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geometric -f https://data.pyg.org/whl/torch-1.11.0+cpu.html # for cpu
 ```
 
+## Dataset & crawler
+
+The dataset can be downloaded in PyG format and new features can be extracted from URLs using the crawler.
+A full guide for both tasks can be found <a href="https://tristanbilot.me/phishgnn">here</a>.
+
 ## Training
 
 During training, the files located in data/training/processed will be used by default. The raw dataset is composed of urls mapped to around 30 features, including a list of references (href, form, iframe) to other pages, which also have their own features and their list of references.
