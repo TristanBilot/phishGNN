@@ -16,7 +16,7 @@ print(f"Torch geometric version: {torch_geometric.__version__}")
 
 class PhishingDataset(Dataset):
     """Dataset containing both phishing and non-phishing
-    website urls.
+    website urls. This is the basic loader for the dataset, without pre-classification
     """
     def __init__(
         self,
