@@ -359,7 +359,7 @@ async fn main() -> anyhow::Result<()> {
                             Ok(id) => id.to_hex(),
                             Err(_) => "<unknown>".into(),
                         };
-                        erroneous_docs.insert(id, anyhow::anyhow!("does not have an url"));
+                        erroneous_docs.insert(id, anyhow::anyhow!("does not have a url"));
                         continue;
                     }
                 };
@@ -375,7 +375,18 @@ async fn main() -> anyhow::Result<()> {
                         let domain_doc = domains_collection
                             .find_one(doc! { "domain": domain }, None)
                             .await?
-                            .ok_or_else(|| anyhow::anyhow!("missing domain for {url}"))?;
+                            .ok_or_else(|| anyhow::anyhow!("missing domain for {url}"));
+
+                        if domain_doc.is_err() {
+                            let id = match document.get_object_id("_id") {
+                                Ok(id) => id.to_hex(),
+                                Err(_) => "<unknown>".into(),
+                            };
+                            erroneous_docs.insert(id, domain_doc.err().unwrap());
+                            continue;
+                        }
+
+                        let domain_doc = domain_doc.unwrap();
 
                         entry.insert(domain_doc)
                     }
