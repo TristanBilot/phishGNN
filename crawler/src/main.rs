@@ -377,17 +377,17 @@ async fn main() -> anyhow::Result<()> {
                             .await?
                             .ok_or_else(|| anyhow::anyhow!("missing domain for {url}"));
 
-                        if domain_doc.is_err() {
-                            let id = match document.get_object_id("_id") {
-                                Ok(id) => id.to_hex(),
-                                Err(_) => "<unknown>".into(),
+                            let domain_doc = match domain_doc {
+                                Ok(doc) => doc,
+                                Err(err) => {
+                                    let id = match document.get_object_id("_id") {
+                                        Ok(id) => id.to_hex(),
+                                        Err(_) => "<unknown>".into(),
+                                    };
+                                    erroneous_docs.insert(id, err);
+                                    continue;
+                                }
                             };
-                            erroneous_docs.insert(id, domain_doc.err().unwrap());
-                            continue;
-                        }
-
-                        let domain_doc = domain_doc.unwrap();
-
                         entry.insert(domain_doc)
                     }
                 };
