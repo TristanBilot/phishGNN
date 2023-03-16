@@ -14,8 +14,8 @@ from sklearn.tree import DecisionTreeClassifier
 import dataprep
 
 
-# from models.ffn import FeedforwardNeuralNetModel
-from .models import FeedforwardNeuralNetModel
+from models.ffn import FeedforwardNeuralNetModel
+# from .models import FeedforwardNeuralNetModel
 
 
 def warn(*args, **kwargs):

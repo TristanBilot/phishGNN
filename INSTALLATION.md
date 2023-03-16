@@ -7,7 +7,7 @@ conda activate torchgraphs
 # install libs
 ```shell
 conda install torchsparse pytorch_geometric matplotlib pyvis bs4 --channel conda-forge
-pip install torch-scatter torch-cluster torch-spline-conv igraph
+pip install torch-scatter torch-cluster torch-spline-conv igraph pandas
 ```
 
 # unzip training/test data 
