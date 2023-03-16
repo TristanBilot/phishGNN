@@ -31,6 +31,11 @@ pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geo
 ./install_dataset.sh
 ```
 
+## Dataset & crawler
+
+The dataset can be downloaded in PyG format and new features can be extracted from URLs using the crawler.
+A full guide for both tasks can be found <a href="https://tristanbilot.me/phishgnn">here</a>.
+
 ## Training
 
 During training, the files located in data/training/processed will be used by default. The raw dataset is composed of urls mapped to around 30 features, including a list of references (href, form, iframe) to other pages, which also have their own features and their list of references.
@@ -59,7 +64,11 @@ python phishGNN/training.py --plot-embeddings
 ## Visualize the graphs
 A tool has been developed in order to visualize graphically the internal structure of web pages from the dataset along with their characteristics such as the number of nodes/edges and whether the page is phishing or benign.
 
-To visualize these data, first follow the instructions in the installation part and open the file `visualization/visualization.html`.
+To visualize these data, first follow the instructions in the installation part, run the `visualization` script and open the file `visualization/visualization.html`.
+
+```bash
+python visualization.py
+```
 
 <center>
     <img width="75%" alt="Screenshot 2022-03-30 at 12 39 01" src="https://user-images.githubusercontent.com/40337775/160822019-712227d8-e000-4781-b55d-8b089409d53d.png">
