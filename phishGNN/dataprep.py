@@ -1,4 +1,3 @@
-
 import json
 from typing import Dict, List, Tuple
 
@@ -9,6 +8,7 @@ from tqdm import tqdm
 from utils.utils import normalize_www_prefix
 
 NAN_VALUE = -1
+
 
 def read_csv(path: str) -> pd.DataFrame:
     """Opens the csv dataset as DataFrame and cast types.
@@ -35,7 +35,7 @@ def read_csv(path: str) -> pd.DataFrame:
     del df['status_code']
     del df['depth']
     del df['domain_creation_date']
-    del df['cert_country'] # TODO: handle cert_country and sort by "dangerous" country
+    del df['cert_country']  # TODO: handle cert_country and sort by "dangerous" country
     return df
 
 
@@ -57,13 +57,15 @@ def normalize_features(df: pd.DataFrame):
     Returns:
         DataFrame: the normalized dataframe
     """
+
     def bool_to_int(col: pd.Series):
         def wrapper(x):
             if np.isnan(x) or x not in [True, False]:
                 return NAN_VALUE
             return 1 if x == True else 0
+
         return col.apply(wrapper)
-    
+
     def min_max_scaling(col: pd.Series):
         min = col.min()
         max = col.max()
@@ -84,10 +86,10 @@ def normalize_features(df: pd.DataFrame):
     df.iloc[:, num_column_idxs] = df.iloc[:, num_column_idxs].fillna(NAN_VALUE)
 
     # normalize bool columns
-    bool_columns = ["is_phishing", "is_https", "is_ip_address", "is_error_page",
-        "has_sub_domain", "has_at_symbol", "is_valid_html", "has_form_with_url",
-        "has_iframe", "use_mouseover", "is_cert_valid", "has_dns_record",
-        "has_whois", "path_starts_with_url"]
+    bool_columns = ['is_phishing', 'is_https', 'is_ip_address', 'is_error_page',
+                    'has_sub_domain', 'has_at_symbol', 'is_valid_html', 'has_form_with_url',
+                    'has_iframe', 'use_mouseover', 'is_cert_valid', 'has_dns_record',
+                    'has_whois', 'path_starts_with_url']
     df[bool_columns] = df[bool_columns].apply(bool_to_int, axis=0)
 
     # normalize urls
@@ -103,11 +105,11 @@ def load_every_urls_with_features(df: pd.DataFrame, path: str) -> Tuple[List, Li
     along with their features.
     """
     every_urls, X = [], []
-    df_as_dict = df.to_dict("records")
-    
+    df_as_dict = df.to_dict('records')
+
     for row in tqdm(df_as_dict):
         every_urls.append(row['url'])
-        features = [value for key, value in row.items() if key not in ["refs", "is_phishing", "url"]]
+        features = [value for key, value in row.items() if key not in ['refs', 'is_phishing', 'url']]
         X.append(features)
 
     return every_urls, X
@@ -132,6 +134,6 @@ def load_train_set(csv_file: str) -> Tuple[pd.DataFrame, List[List], List[int]]:
     for i, (_, url) in enumerate(tqdm(root_urls.items(), total=len(root_urls))):
         data = df.loc[url]
         y.append(data.is_phishing)
-        X.append(data.drop("refs").drop("is_phishing"))
+        X.append(data.drop('refs').drop('is_phishing'))
 
     return df.reset_index(), X, y

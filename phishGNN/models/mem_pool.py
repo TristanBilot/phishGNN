@@ -1,18 +1,20 @@
 import torch
 import torch.nn.functional as F
+from torch import Tensor, device
 from torch.nn import BatchNorm1d, LeakyReLU, Linear
 from torch_geometric.nn import DeepGCNLayer, GATConv, MemPooling
+from torch_geometric.typing import OptTensor, Adj, PairTensor
 
 
 class MemPool(torch.nn.Module):
     def __init__(
-        self,
-        in_channels=None,
-        hidden_channels=32,
-        out_channels=None,
-        pooling_fn=None,
-        device=None,
-        dropout=0.5,
+            self,
+            in_channels: int = None,
+            hidden_channels: int = 32,
+            out_channels: int = None,
+            pooling_fn: callable = None,
+            device: device = None,
+            dropout: float = 0.5
     ):
         super().__init__()
 
@@ -34,9 +36,8 @@ class MemPool(torch.nn.Module):
         self.mem2 = MemPooling(80, out_channels, heads=5, num_clusters=1)
         self.embeddings = None
 
-
-    def forward(self, x, edge_index, batch):
-        x = x.float()
+    def forward(self, x: Tensor, edge_index: Adj, batch: OptTensor) -> PairTensor:
+        x = x.to(dtype=torch.float32)
         x = self.lin(x)
         for conv in self.convs:
             x = conv(x, edge_index)
@@ -52,13 +53,12 @@ class MemPool(torch.nn.Module):
             MemPooling.kl_loss(S1) + MemPooling.kl_loss(S2),
         )
 
-
     def fit(
-        self,
-        train_loader,
-        optimizer,
-        loss_fn,
-        device,
+            self,
+            train_loader,
+            optimizer,
+            loss_fn,
+            device,
     ):
         self.train()
 
@@ -68,7 +68,7 @@ class MemPool(torch.nn.Module):
             optimizer.zero_grad()
             data = data.to(self.device)
             out = self(data.x, data.edge_index, data.batch)[0]
-            loss = F.nll_loss(out, data.y.long())
+            loss = F.nll_loss(out, data.y)
             loss.backward()
             optimizer.step()
 
@@ -77,7 +77,7 @@ class MemPool(torch.nn.Module):
         self.mem2.k.requires_grad = True
         optimizer.zero_grad()
         for data in train_loader:
-            data = data.to(self.device)
+            data = data.to(device=self.device)
             kl_loss += self(data.x, data.edge_index, data.batch)[1]
 
         kl_loss /= len(train_loader.dataset)
@@ -86,13 +86,12 @@ class MemPool(torch.nn.Module):
 
         return kl_loss
 
-
     @torch.no_grad()
     def test(self, loader, device):
         self.eval()
         correct = 0
         for data in loader:
-            data = data.to(self.device)
+            data = data.to(device)
             out = self(data.x, data.edge_index, data.batch)[0]
             pred = out.argmax(dim=-1)
             correct += int((pred == data.y).sum())

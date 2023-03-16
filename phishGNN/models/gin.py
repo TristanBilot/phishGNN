@@ -1,23 +1,19 @@
-import os.path as osp
-from typing import List
-
 import torch
 import torch.nn.functional as F
-import torch_geometric.transforms as T
-from torch.nn import BatchNorm1d, Dropout, Linear, ReLU, Sequential
-from torch_geometric.datasets import TUDataset
-from torch_geometric.loader import DataLoader
+from torch import Tensor, device
+from torch.nn import BatchNorm1d, Linear, ReLU, Sequential
 from torch_geometric.nn import GINConv, global_add_pool
+from torch_geometric.typing import OptTensor, Adj
 
 
 class GIN(torch.nn.Module):
     def __init__(
         self,
-        in_channels=None,
-        hidden_channels=32,
-        out_channels=None,
-        pooling_fn=global_add_pool,
-        device=None,
+        in_channels:int=None,
+        hidden_channels:int=32,
+        out_channels:int=None,
+        pooling_fn:callable=global_add_pool,
+        device:device=None,
     ):
         super().__init__()
 
@@ -45,8 +41,8 @@ class GIN(torch.nn.Module):
         self.lin2 = Linear(hidden_channels, out_channels)
         self.embeddings = None
 
-    def forward(self, x, edge_index, batch):
-        x = x.float()
+    def forward(self, x:Tensor, edge_index:Adj, batch:OptTensor) -> Tensor:
+        x = x.to(dtype=torch.float32)
         x = self.conv1(x, edge_index)
         x = self.conv2(x, edge_index)
         x = self.conv3(x, edge_index)

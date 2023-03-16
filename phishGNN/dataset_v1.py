@@ -3,63 +3,67 @@ import os
 
 import pandas as pd
 import torch
+from torch import Tensor
 import torch_geometric
 from torch_geometric.data import Data, Dataset
 from tqdm import tqdm
 
 import dataprep
+from utils.compute_device import COMPUTE_DEVICE
 from utils.utils import normalize_www_prefix
 
-print(f"Torch version: {torch.__version__}")
-print(f"Cuda available: {torch.cuda.is_available()}")
-print(f"Torch geometric version: {torch_geometric.__version__}")
+print(f'Torch version: {torch.__version__}')
+print(f'Compute device: {COMPUTE_DEVICE}')
+print(f'Torch geometric version: {torch_geometric.__version__}')
+
+# set default dtype, as MPS Pytorch does not support float64
+torch.set_default_dtype(torch.float32)
+
 
 class PhishingDataset(Dataset):
-    """Dataset containing both phishing and non-phishing
-    website urls. This is the basic loader for the dataset, without pre-classification
-    """
+    """Dataset containing both phishing and non-phishing website urls. """
+
     def __init__(
-        self,
-        root: str,
-        use_process: bool=True,
-        visulization_mode: bool=False,
-        nan_value: float=-1.0,
-        transform=None,
-        pre_transform=None,
+            self,
+            root: str,
+            do_data_preparation: bool = True,
+            visualization_mode: bool = False,
+            nan_value: float = -1.0,
+            transform=None,
+            pre_transform=None,
     ):
         """
         root = Where the dataset should be stored. This folder is split
         into raw_dir (downloaded dataset) and processed_dir (processed data). 
         """
-        self.use_process = use_process
-        self.visulization_mode = visulization_mode
+        self.do_data_preparation = do_data_preparation
+        self.visualization_mode = visualization_mode
         self.nan_value = nan_value
         super(PhishingDataset, self).__init__(root, transform, pre_transform)
 
     @property
-    def raw_file_names(self):
-        """File name of the csv dataset.
-        """
-        return glob.glob(os.path.join(self.raw_dir, "*"))
+    def raw_file_names(self) -> list[str]:
+        """File name of the csv dataset. """
+        return glob.glob(os.path.join(self.raw_dir, '*'))
 
     @property
-    def processed_file_names(self):
-        return [file + ".pt" for file in self.raw_file_names]
+    def processed_file_names(self) -> list[str]:
+        return [file + '.pt' for file in self.raw_file_names]
 
     @property
     def num_classes(self):
         return 2
 
-    def file_name(self, idx: int):
-        if self.visulization_mode:
+    def file_name(self, idx: int) -> str:
+        if self.visualization_mode:
             return f'data_viz_{idx}.pt'
         return f'data_{idx}.pt'
 
-    def process(self):
+    def process(self) -> None:
         """Reads csv files in data/raw and preprocess so that output
         preprocessed files are written in data/processed folder.
         """
-        if not self.use_process:
+        if not self.do_data_preparation:
             return
 
         # loop over all files in `raw_file_names`
@@ -69,7 +73,7 @@ class PhishingDataset(Dataset):
 
             root_urls = df[~df['is_phishing'].isin([self.nan_value])]['url']
             df = df.set_index('url')
-            df_to_dict = df.to_dict("index")
+            df_to_dict = df.to_dict('index')
 
             # loop over each root urls in the dataset
             for i, (_, url) in enumerate(tqdm(root_urls.items(), total=len(root_urls))):
@@ -82,14 +86,12 @@ class PhishingDataset(Dataset):
                 self.data.pos = viz_utils
                 torch.save(self.data, os.path.join(self.processed_dir, f'data_viz_{i}.pt'))
 
-
     def len(self):
         return (len(os.listdir(self.processed_dir)) - 4) // 2
 
-
-    def _build_tensors(self, root_url: str, df_to_dict, existing_urls):
+    def _build_tensors(self, root_url: str, df_to_dict, existing_urls) -> tuple[Tensor, Tensor, Tensor, Tensor, dict]:
         """Builds the required tensors for one graph.
-        Theses matrices will be then used for training the GNN.
+        These matrices will be then used for training the GNN.
 
         Args:
             df: the dataset of one graph as form of pandas daframe
@@ -130,37 +132,39 @@ class PhishingDataset(Dataset):
 
                 from_.append(url_to_id[url])
                 to_.append(url_to_id[ref])
-                edges_.append([1]) # should be edge features
-                    
+                edges_.append([1])  # should be edge features
+
                 is_anchor = ref == url
                 if not is_anchor:
                     queue.append(ref)
                 visited.add((url, ref, i))
 
             # remove url and refs
-            features = [v for k, v in sorted(node.items()) \
-                if k not in ['refs', 'is_phishing']]
+            features = [v for k, v in sorted(node.items())
+                        if k not in ['refs', 'is_phishing']]
             id_to_feat[url_to_id[url]] = features
-        
+
         x = [id_to_feat[k] for k in sorted(id_to_feat)]
         visualization = {
-            "url_to_id": url_to_id,
-            "error_pages": error_pages,
+            'url_to_id': url_to_id,
+            'error_pages': error_pages,
         }
 
         return (
-            torch.tensor([from_, to_]).type(torch.LongTensor),
-            torch.tensor(x),
-            torch.tensor(edges_),
-            torch.tensor(df_to_dict[root_url]['is_phishing']),
+            torch.tensor([from_, to_], dtype=torch.int64),
+            torch.tensor(x, dtype=torch.float32),
+            torch.tensor(edges_, dtype=torch.int64),
+            torch.tensor(df_to_dict[root_url]['is_phishing'], dtype=torch.int64),
             visualization,
         )
-        
 
     def get(self, idx):
-        return torch.load(os.path.join(self.processed_dir, self.file_name(idx)))
+        t = torch.load(os.path.join(self.processed_dir, self.file_name(idx)))
+        t.x = t.x.to(dtype=torch.float32)
+        t.y = t.y.to(dtype=torch.int64)
+        t.edge_index = t.edge_index.to(dtype=torch.int64)
+        return t
 
-        
     @property
     def error_page_node_feature(self):
         data = {
@@ -194,7 +198,6 @@ class PhishingDataset(Dataset):
             'refs': [],
         }
         return pd.Series(data=data)
-
 
     def _normalize_url(self, url: str):
         url = url.rstrip('/')

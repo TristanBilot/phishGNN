@@ -1,18 +1,20 @@
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch
+from torch import Tensor, device
 from torch_geometric.nn import SAGEConv
 from torch_geometric.nn import global_mean_pool
+from torch_geometric.typing import OptTensor, Adj
 
 
 class GraphSAGE(nn.Module):
     def __init__(
-        self,
-        in_channels=None,
-        hidden_channels=16,
-        out_channels=None,
-        pooling_fn=global_mean_pool,
-        device=None,
+            self,
+            in_channels: int = None,
+            hidden_channels: int = 16,
+            out_channels: int = None,
+            pooling_fn: callable = global_mean_pool,
+            device: device = None,
     ):
         super(GraphSAGE, self).__init__()
 
@@ -24,8 +26,8 @@ class GraphSAGE(nn.Module):
         self.conv2 = SAGEConv(hidden_channels, out_channels)
         self.embeddings = None
 
-    def forward(self, x, edge_index, batch):
-        x = x.float()
+    def forward(self, x: Tensor, edge_index: Adj, batch: OptTensor) -> Tensor:
+        x = x.to(dtype=torch.float32)
         x = self.conv1(x, edge_index)
         x = x.relu()
         x = F.dropout(x, training=self.training)
