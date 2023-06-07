@@ -10,7 +10,7 @@ from utils.utils import normalize_www_prefix
 NAN_VALUE = -1
 
 
-def read_csv(path: str) -> pd.DataFrame:
+def read_csv(path: str, train_test_equilibrum: bool=True) -> pd.DataFrame:
     """Opens the csv dataset as DataFrame and cast types.
     """
     date_parser = lambda c: pd.to_datetime(c, format='%Y-%m-%dT%H:%M:%SZ', errors='coerce')
@@ -22,10 +22,11 @@ def read_csv(path: str) -> pd.DataFrame:
     )
 
     # equilibrate dataset classes as 50/50% benign/phishing
-    nb_phishing = len(df[df['is_phishing'] == 1])
-    benign = df.index[(df['is_phishing'] == 0)][:nb_phishing]
-    other = df.index[~(df['is_phishing'] == 0)]
-    df = pd.concat([df.iloc[benign], df.iloc[other]])
+    if train_test_equilibrum:
+        nb_phishing = len(df[df['is_phishing'] == 1])
+        benign = df.index[(df['is_phishing'] == 0)][:nb_phishing]
+        other = df.index[~(df['is_phishing'] == 0)]
+        df = pd.concat([df.iloc[benign], df.iloc[other]])
 
     # cast object dtypes
     df['url'] = df['url'].astype('string')
@@ -115,7 +116,7 @@ def load_every_urls_with_features(df: pd.DataFrame, path: str) -> Tuple[List, Li
     return every_urls, X
 
 
-def load_train_set(csv_file: str) -> Tuple[pd.DataFrame, List[List], List[int]]:
+def load_train_set(csv_file: str, train_test_equilibrum: bool=True) -> Tuple[pd.DataFrame, List[List], List[int]]:
     """Opens the csv file in `csv_file` and returns every
     features and label of each root url in the dataset.
 
@@ -124,7 +125,7 @@ def load_train_set(csv_file: str) -> Tuple[pd.DataFrame, List[List], List[int]]:
         X: the list of features (list) of each root url
         y: the list of labels (int) of each root url
     """
-    df = read_csv(csv_file)
+    df = read_csv(csv_file, train_test_equilibrum=train_test_equilibrum)
     df = normalize_features(df)
 
     root_urls = df[~df['is_phishing'].isin([NAN_VALUE])]['url']

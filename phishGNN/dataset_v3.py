@@ -22,7 +22,7 @@ print(f'Torch geometric version: {torch_geometric.__version__}')
 torch.set_default_dtype(torch.float32)
 
 
-class PhishingDataset2(Dataset):
+class PhishingDataset3(Dataset):
     """Dataset containing both phishing and non-phishing website urls. """
 
     def __init__(
@@ -41,7 +41,7 @@ class PhishingDataset2(Dataset):
         self.do_data_preparation = do_data_preparation
         self.visualization_mode = visualization_mode
         self.nan_value = nan_value
-        super(PhishingDataset2, self).__init__(root, transform, pre_transform)
+        super(PhishingDataset3, self).__init__(root, transform, pre_transform)
 
     @property
     def raw_file_names(self) -> List[str]:
@@ -70,14 +70,9 @@ class PhishingDataset2(Dataset):
 
         # loop over all files in `raw_file_names`
         for raw_path in self.raw_paths:
-            df, X, y = dataprep.load_train_set(raw_path)
-            df_eval, X_eval, y_eval = dataprep.load_train_set('data/test/raw/evaloutput.csv')
+            df, X, y = dataprep.load_train_set(raw_path, train_test_equilibrum=False)
 
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-            X_test = [*X_test, *X_eval]
-            y_test = [*y_test, *y_eval]
-
-            forest, _ = train_random_forest(X_train, X_test, y_train, y_test)
+            forest, _ = train_random_forest(X, X, y, y)
 
             every_urls, every_features = dataprep.load_every_urls_with_features(df, raw_path)
             every_preds = forest.predict(every_features)
@@ -103,7 +98,7 @@ class PhishingDataset2(Dataset):
                 torch.save(self.data, os.path.join(self.processed_dir, f'data_viz_{i}.pt'))
 
     def len(self):
-        return (len(os.listdir(self.processed_dir)) - 4) // 2
+        return (len(os.listdir(self.processed_dir)) - 2)
 
     def _build_tensors(self, root_url: str, df_to_dict, existing_urls) -> Tuple[Tensor, Tensor, Tensor, Tensor, dict]:
         """Builds the required tensors for one graph.

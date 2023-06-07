@@ -1,4 +1,5 @@
 import time
+from typing import Tuple
 
 import torch
 from sklearn.model_selection import StratifiedKFold
@@ -15,7 +16,7 @@ torch.set_default_dtype(torch.float32)
 
 def cross_validation_with_val_set(dataset, model, loss_fn, folds, epochs, batch_size,
                                   lr, lr_decay_factor, lr_decay_step_size,
-                                  weight_decay, logger=None) -> tuple[float, float, float]:
+                                  weight_decay, logger=None) -> Tuple[float, float, float]:
 
     val_losses, accs, durations = [], [], []
     for fold, (train_idx, test_idx, val_idx) in enumerate(zip(*k_fold(dataset, folds))):
