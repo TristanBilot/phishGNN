@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List
 from urllib.parse import urlparse
 
 import numpy as np
@@ -25,7 +25,7 @@ def log_fail(msg: str):
     print(f'{bcolors.FAIL}FAILURE:\t{bcolors.ENDC}{msg}')
 
 
-def tensor_to_tuple_list(tensor: torch.Tensor) -> List[Tuple[int, int]]:
+def tensor_to_tuple_list(tensor: torch.Tensor) -> list[tuple[int, int]]:
     """Converts a tensor of shape [[x], [y]] in an
     array of tuples of shape [(x, y)].
     """

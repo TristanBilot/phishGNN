@@ -1,6 +1,5 @@
 import glob
 import os
-from typing import Tuple, List
 
 import pandas as pd
 import torch
@@ -44,12 +43,12 @@ class PhishingDataset2(Dataset):
         super(PhishingDataset2, self).__init__(root, transform, pre_transform)
 
     @property
-    def raw_file_names(self) -> List[str]:
+    def raw_file_names(self) -> list[str]:
         """File name of the csv dataset. """
         return glob.glob(os.path.join(self.raw_dir, '*'))
 
     @property
-    def processed_file_names(self) -> List[str]:
+    def processed_file_names(self) -> list[str]:
         return [file + '.pt' for file in self.raw_file_names]
 
     @property
@@ -105,7 +104,7 @@ class PhishingDataset2(Dataset):
     def len(self):
         return (len(os.listdir(self.processed_dir)) - 4) // 2
 
-    def _build_tensors(self, root_url: str, df_to_dict, existing_urls) -> Tuple[Tensor, Tensor, Tensor, Tensor, dict]:
+    def _build_tensors(self, root_url: str, df_to_dict, existing_urls) -> tuple[Tensor, Tensor, Tensor, Tensor, dict]:
         """Builds the required tensors for one graph.
         These matrices will be then used for training the GNN.
 
