@@ -34,7 +34,7 @@ pip install torch-scatter torch-sparse torch-cluster torch-spline-conv torch-geo
 ## Dataset & crawler
 
 The dataset can be downloaded in PyG format and new features can be extracted from URLs using the crawler.
-A full guide for both tasks can be found <a href="https://tristanbilot.me/phishgnn">here</a>.
+A full guide for both tasks can be found <a href="https://tristanbilot.github.io/#/phishgnn">here</a>.
 
 ## Training
 
