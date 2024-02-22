@@ -1,6 +1,7 @@
 import glob
 import os
 
+import joblib
 import pandas as pd
 import torch
 import torch_geometric
@@ -18,12 +19,13 @@ print(f'Compute device: {COMPUTE_DEVICE}')
 print(f'Torch geometric version: {torch_geometric.__version__}')
 
 
-class PhishingDataset2(Dataset):
+class PhishingDataset(Dataset):
     """Dataset containing both phishing and non-phishing website urls. """
 
     def __init__(
             self,
             root: str,
+            predict: bool = False,
             do_data_preparation: bool = True,
             visualization_mode: bool = False,
             nan_value: float = -1.0,
@@ -34,10 +36,11 @@ class PhishingDataset2(Dataset):
         root = Where the dataset should be stored. This folder is split
         into raw_dir (downloaded dataset) and processed_dir (processed data). 
         """
+        self.predict = predict
         self.do_data_preparation = True
         self.visualization_mode = visualization_mode
         self.nan_value = nan_value
-        super(PhishingDataset2, self).__init__(root, transform, pre_transform)
+        super(PhishingDataset, self).__init__(root, transform, pre_transform)
 
     @property
     def raw_file_names(self) -> list[str]:
@@ -68,9 +71,15 @@ class PhishingDataset2(Dataset):
         for raw_path in self.raw_paths:
             df, X, y = dataprep.load_train_set(raw_path)
 
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+            random_forst_pkl_path = os.path.join(os.getcwd(), "data", 'random_forest.pkl')
+            if self.predict:
+                forest = joblib.load(random_forst_pkl_path)
+            else:
 
-            forest, _ = train_random_forest(X_train, X_test, y_train, y_test)
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+
+                forest, _ = train_random_forest(X_train, X_test, y_train, y_test)
+                joblib.dump(forest, random_forst_pkl_path)
 
             every_urls, every_features = dataprep.load_every_urls_with_features(df, raw_path)
             every_preds = forest.predict(every_features)

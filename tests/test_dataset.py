@@ -7,7 +7,7 @@ import torch
 
 sys.path.append(os.path.join(os.getcwd(), 'phishGNN'))
 
-from dataset_v1 import PhishingDataset
+from dataset import PhishingDataset
 
 
 def dataframe_mock(rows: List[Tuple[str, List, str]]):

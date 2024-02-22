@@ -4,7 +4,7 @@ import os
 
 import torch
 
-from dataset_v1 import PhishingDataset
+from dataset import PhishingDataset
 from utils.compute_device import COMPUTE_DEVICE
 
 
@@ -15,7 +15,7 @@ def predict(weights_file: str) -> int:
         raise FileNotFoundError(f'No files found in path {path}, please generate a csv dataset from the URLs you want to predict'
             f' and move this file into {path}')
 
-    dataset = PhishingDataset(root=path, do_data_preparation=True)
+    dataset = PhishingDataset(root=path, predict=True, do_data_preparation=True)
     data = dataset.data
     data = data.to(COMPUTE_DEVICE)
 

@@ -12,3 +12,4 @@ graphs/
 *.csv
 *.DS_Store
 *.zip
+lib/
