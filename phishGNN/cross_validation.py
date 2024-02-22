@@ -9,9 +9,6 @@ from torch_geometric.loader import DataLoader
 
 from utils.compute_device import COMPUTE_DEVICE
 
-# set default dtype, as MPS Pytorch does not support float64
-torch.set_default_dtype(torch.float32)
-
 
 def cross_validation_with_val_set(dataset, model, loss_fn, folds, epochs, batch_size,
                                   lr, lr_decay_factor, lr_decay_step_size,

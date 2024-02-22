@@ -16,9 +16,6 @@ print(f'Torch version: {torch.__version__}')
 print(f'Compute device: {COMPUTE_DEVICE}')
 print(f'Torch geometric version: {torch_geometric.__version__}')
 
-# set default dtype, as MPS Pytorch does not support float64
-torch.set_default_dtype(torch.float32)
-
 
 class PhishingDataset(Dataset):
     """Dataset containing both phishing and non-phishing website urls. """

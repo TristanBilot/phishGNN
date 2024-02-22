@@ -17,9 +17,6 @@ print(f'Torch version: {torch.__version__}')
 print(f'Compute device: {COMPUTE_DEVICE}')
 print(f'Torch geometric version: {torch_geometric.__version__}')
 
-# set default dtype, as MPS Pytorch does not support float64
-torch.set_default_dtype(torch.float32)
-
 
 class PhishingDataset2(Dataset):
     """Dataset containing both phishing and non-phishing website urls. """
@@ -37,7 +34,7 @@ class PhishingDataset2(Dataset):
         root = Where the dataset should be stored. This folder is split
         into raw_dir (downloaded dataset) and processed_dir (processed data). 
         """
-        self.do_data_preparation = do_data_preparation
+        self.do_data_preparation = True
         self.visualization_mode = visualization_mode
         self.nan_value = nan_value
         super(PhishingDataset2, self).__init__(root, transform, pre_transform)
@@ -70,11 +67,8 @@ class PhishingDataset2(Dataset):
         # loop over all files in `raw_file_names`
         for raw_path in self.raw_paths:
             df, X, y = dataprep.load_train_set(raw_path)
-            df_eval, X_eval, y_eval = dataprep.load_train_set('data/test/raw/evaloutput.csv')
 
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
-            X_test = [*X_test, *X_eval]
-            y_test = [*y_test, *y_eval]
 
             forest, _ = train_random_forest(X_train, X_test, y_train, y_test)
 
