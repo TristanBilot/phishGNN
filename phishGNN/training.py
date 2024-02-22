@@ -255,6 +255,7 @@ if __name__ == '__main__':
                         help='whether to save the embeddings in a png file during training or not')
     args, _ = parser.parse_known_args()
 
+    # Can be switched to False once csv filed from the crawler are preprocessed in .pt files
     process_dataset = True
 
     if args.test:
