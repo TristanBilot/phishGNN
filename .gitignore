@@ -9,3 +9,6 @@ graphs/
 *.pkl
 *.png
 *.svg
+*.csv
+*.DS_Store
+*.zip
