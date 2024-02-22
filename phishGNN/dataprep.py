@@ -69,7 +69,8 @@ def normalize_features(df: pd.DataFrame):
     def min_max_scaling(col: pd.Series):
         min = col.min()
         max = col.max()
-        return col.apply(lambda x: (x - min) / (max - min))
+        eps = 1e-6
+        return col.apply(lambda x: (x - min) / (max - min + eps))
 
     def normalize_refs(refs: List[Dict]):
         refs = json.loads(refs)
