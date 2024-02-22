@@ -22,10 +22,10 @@ def read_csv(path: str) -> pd.DataFrame:
     )
 
     # equilibrate dataset classes as 50/50% benign/phishing
-    nb_phishing = len(df[df['is_phishing'] == 1])
-    benign = df.index[(df['is_phishing'] == 0)][:nb_phishing]
-    other = df.index[~(df['is_phishing'] == 0)]
-    df = pd.concat([df.iloc[benign], df.iloc[other]])
+    # nb_phishing = len(df[df['is_phishing'] == 1])
+    # benign = df.index[(df['is_phishing'] == 0)][:nb_phishing]
+    # other = df.index[~(df['is_phishing'] == 0)]
+    # df = pd.concat([df.iloc[benign], df.iloc[other]])
 
     # cast object dtypes
     df['url'] = df['url'].astype('string')
