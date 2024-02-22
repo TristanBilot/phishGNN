@@ -37,7 +37,7 @@ class PhishingDataset(Dataset):
         into raw_dir (downloaded dataset) and processed_dir (processed data). 
         """
         self.predict = predict
-        self.do_data_preparation = True
+        self.do_data_preparation = do_data_preparation
         self.visualization_mode = visualization_mode
         self.nan_value = nan_value
         super(PhishingDataset, self).__init__(root, transform, pre_transform)

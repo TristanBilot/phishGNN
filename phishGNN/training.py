@@ -255,10 +255,13 @@ if __name__ == '__main__':
                         help='whether to save the embeddings in a png file during training or not')
     args, _ = parser.parse_known_args()
 
+    process_dataset = True
+
     if args.test:
         accuracy = test_model(
             '2_epochs/GCN_2_global_mean_pool_32.pkl',
+            do_data_preparation=process_dataset,
             should_plot_embeddings=args.plot_embeddings)
         print(accuracy)
     else:
-        train_cross_entropy(args.process_dataset)
+        train_cross_entropy(do_data_preparation=process_dataset)
