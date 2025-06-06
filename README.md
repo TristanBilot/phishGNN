@@ -1,6 +1,6 @@
 # PhishGNN
 
-Phishing website detection using Graph Neural Networks (GNNs).
+Code for the paper: [PhishGNN: A Phishing Website Detection Framework using Graph Neural Networks](https://hal.science/hal-04401167v1/file/PhishGNN_A_Phishing_Website_Detection_Framework_using_Graph_Neural_Networks.pdf).
 
 <p float="left">
     <img width="35%" alt="phishing_graph" src="https://user-images.githubusercontent.com/40337775/165151501-0c0f37b0-c055-4085-b640-3a86e4c9a7d8.svg">
@@ -74,6 +74,20 @@ python visualization.py
     <img width="75%" alt="Screenshot 2022-03-30 at 12 39 01" src="https://user-images.githubusercontent.com/40337775/160822019-712227d8-e000-4781-b55d-8b089409d53d.png">
 </center>
 
+## Citation
+
+If you use this code, please cite the following paper.
+
+```
+@inproceedings{bilot2022phishgnn,
+  title={Phishgnn: a phishing website detection framework using graph neural networks},
+  author={Bilot, Tristan and Geis, Gr{\'e}goire and Hammi, Badis},
+  booktitle={19th International Conference on Security and Cryptography},
+  pages={428--435},
+  year={2022},
+  organization={SCITEPRESS-Science and Technology Publications}
+}
+```
 
 ## License
   <a href="https://opensource.org/licenses/MIT">MIT</a>
